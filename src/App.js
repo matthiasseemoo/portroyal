@@ -4,6 +4,41 @@ function ShuffleDrawPile(G, ctx) {
   G.drawPile = ctx.random.Shuffle(G.drawPile);
 }
 
+function TradeShip(G, ctx, cardIndex) {
+  if (cardIndex < G.harborDisplayShips.length) {
+    // Add coins to player
+    G.playerCoins = G.playerCoins.slice();
+    G.playerCoins[ctx.currentPlayer] += G.harborDisplayShips[cardIndex].coins;
+    
+    // Add Ship to discard pile
+    G.discardPile = G.discardPile.concat([ G.harborDisplayShips[cardIndex] ]);
+
+    // Remove ship from harbor display
+    G.harborDisplayShips = G.harborDisplayShips.slice();
+    G.harborDisplayShips.splice(cardIndex, 1);
+  }
+}
+
+function HirePerson(G, ctx, cardIndex) {
+  if (cardIndex < G.harborDisplayNonShips.length) {
+    let hiredPerson = G.harborDisplayNonShips[cardIndex];
+
+    if (hiredPerson.hireingCosts <= G.playerCoins[ctx.currentPlayer]) {
+      // Remove Person from harbor display
+      G.harborDisplayNonShips = G.harborDisplayNonShips.slice();
+      G.harborDisplayNonShips.splice(cardIndex, 1);
+
+      // Add hired person to player display
+      G.playerDisplays = G.playerDisplays.slice();
+      G.playerDisplays[ctx.currentPlayer] = G.playerDisplays[ctx.currentPlayer].concat([ hiredPerson ]);
+
+      // Remove coins from player
+      G.playerCoins = G.playerCoins.slice();
+      G.playerCoins[ctx.currentPlayer] -= hiredPerson.hireingCosts;
+    }
+  }
+}
+
 function DrawCard(G, ctx) {
   let drawnCard = G.drawPile[0];
   G.drawPile = G.drawPile.slice(1);
@@ -13,13 +48,38 @@ function DrawCard(G, ctx) {
   } else if (drawnCard.type === 'Person') {
     G.harborDisplayNonShips = G.harborDisplayNonShips.concat([drawnCard]);
   } else if (drawnCard.type === 'Ship') {
-    G.harborDisplayShips  = G.harborDisplayShips.concat([drawnCard]);
+    let endTurn = false;
+    
+    for (const ship of G.harborDisplayShips) {
+      if (ship.color === drawnCard.color) {
+        endTurn = true;
+      }
+    }
+
+    if (endTurn) {
+      G.discardPile = G.discardPile.concat([drawnCard]);
+      ctx.events.endTurn();
+    } else {
+      G.harborDisplayShips  = G.harborDisplayShips.concat([drawnCard]);
+    }
   } else if (drawnCard.type === 'TaxIncrease') {
-    G.discardPile  = G.discardPile.concat([drawnCard]);
+    G.discardPile = G.discardPile.concat([drawnCard]);
   }
 }
 
-const TicTacToe = {
+function EndTurn(G, ctx) {
+  // discard cards from harbor display
+  G.discardPile = G.discardPile.concat(G.harborDisplayNonShips);
+  G.harborDisplayNonShips = new Array();
+  G.discardPile = G.discardPile.concat(G.harborDisplayShips);
+  G.harborDisplayShips = new Array();
+}
+
+function BeginTurn(G, ctx) {
+  ctx.events.setStage('discover');
+}
+
+const PortRoyal = {
   setup: (ctx, setupData) => ({
     drawPile: ctx.random.Shuffle([
       { type: 'Expedition', subtype: 'anchorCrossHouse', victoryPoints: 5, imageFilename: 'card_zoom-0.png' },
@@ -85,21 +145,28 @@ const TicTacToe = {
       { type: 'TaxIncrease', subtype: 'minVictoryPoints', imageFilename: 'card_zoom-116.png' },
       { type: 'TaxIncrease', subtype: 'maxSwords', imageFilename: 'card_zoom-118.png' },
     ]),
-    discardPile: Array(),
+    playerDisplays: Array(ctx.numPlayers).fill(Array()),
+    playerCoins: Array(ctx.numPlayers).fill(0),
     harborDisplayShips: Array(),
     harborDisplayNonShips: Array(),
-    expeditionDisplay: Array()
+    expeditionDisplay: Array(),
+    discardPile: Array(),
   }),
 
-  phases: {
-    discover: {
-      moves: { DrawCard },
-      start: true,
-      next: 'tradeAndHire',
-    },
+  turn: {
+    onEnd: EndTurn,
 
-    tradeAndHire: {
-      moves: {  },
+    onBegin: BeginTurn,
+
+    stages: {
+      discover: {
+        moves: { DrawCard },
+        next: 'tradeAndHire',
+      },
+
+      tradeAndHire: {
+        moves: { HirePerson, TradeShip },
+      },
     },
   },
 
@@ -108,6 +175,6 @@ const TicTacToe = {
   },
 };
 
-const App = Client({ game: TicTacToe });
+const App = Client({ game: PortRoyal });
 
 export default App;
