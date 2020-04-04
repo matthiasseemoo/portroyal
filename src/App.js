@@ -1,4 +1,6 @@
 import { Client } from 'boardgame.io/react';
+import logger from 'redux-logger';
+import { applyMiddleware } from 'redux';
 
 // TODO: how many cards to draw
 // TODO: repel ships
@@ -139,7 +141,7 @@ function BeginTurn(G, ctx) {
     G.harborDisplayNonShips = new Array();
     G.discardPile = G.discardPile.concat(G.harborDisplayShips);
     G.harborDisplayShips = new Array();
-    ctx.events.endTurn();
+    // We somehow should end the turn
   } else {
     // Only trade&hire
     ctx.events.setStage('tradeAndHire');
@@ -242,6 +244,6 @@ const PortRoyal = {
   },
 };
 
-const App = Client({ game: PortRoyal });
+const App = Client({ game: PortRoyal, enhancer: applyMiddleware(logger) });
 
 export default App;
