@@ -21,6 +21,12 @@ function TradeShip(G, ctx, cardIndex) {
     // Add coins to player
     G.playerCoins = G.playerCoins.slice();
     G.playerCoins[ctx.currentPlayer] += G.harborDisplayShips[cardIndex].coins;
+
+    // if other players take cards, one coin needs to be given to the active player.
+    if (G.activePlayer !== ctx.currentPlayer) {
+      G.playerCoins[ctx.currentPlayer]--;
+      G.playerCoins[G.activePlayer]++;
+    }
     
     // Add Ship to discard pile
     G.discardPile = G.discardPile.concat([ G.harborDisplayShips[cardIndex] ]);
@@ -34,8 +40,9 @@ function TradeShip(G, ctx, cardIndex) {
 function HirePerson(G, ctx, cardIndex) {
   if (cardIndex < G.harborDisplayNonShips.length) {
     let hiredPerson = G.harborDisplayNonShips[cardIndex];
+    let extracost = G.activePlayer === ctx.currentPlayer ? 0 : 1;
 
-    if (hiredPerson.hireingCosts <= G.playerCoins[ctx.currentPlayer]) {
+    if (hiredPerson.hireingCosts + extracost <= G.playerCoins[ctx.currentPlayer]) {
       // Remove Person from harbor display
       G.harborDisplayNonShips = G.harborDisplayNonShips.slice();
       G.harborDisplayNonShips.splice(cardIndex, 1);
@@ -55,6 +62,12 @@ function HirePerson(G, ctx, cardIndex) {
       // Remove coins from player
       G.playerCoins = G.playerCoins.slice();
       G.playerCoins[ctx.currentPlayer] -= hiredPerson.hireingCosts;
+
+      // if other players take cards, one coin needs to be given to the active player.
+      if (G.activePlayer !== ctx.currentPlayer) {
+        G.playerCoins[ctx.currentPlayer]--;
+        G.playerCoins[G.activePlayer]++;
+      }
     }
   }
 }
@@ -78,6 +91,10 @@ function DrawCard(G, ctx) {
 
     if (discardHarborDisplay) {
       G.discardPile = G.discardPile.concat([drawnCard]);
+      G.discardPile = G.discardPile.concat(G.harborDisplayNonShips);
+      G.harborDisplayNonShips = [];
+      G.discardPile = G.discardPile.concat(G.harborDisplayShips);
+      G.harborDisplayShips = [];
       ctx.events.endTurn();
     } else {
       G.harborDisplayShips  = G.harborDisplayShips.concat([drawnCard]);
@@ -125,32 +142,25 @@ function DrawCard(G, ctx) {
   }
 }
 
-function EndDiscover(G, ctx) {
-  ctx.events.endStage();
-}
-
-function EndTradeAndHire(G, ctx) {
-  let activePlayer = Object.getOwnPropertyNames(ctx.activePlayers)[0];
-  // if the last player finished tradeAndHire, end the turn
-  if (ctx.currentPlayer + ctx.numPlayers - 1 === activePlayer) {
-    alert('1');
-//    ctx.events.endStage();
-  } else {
-    alert('2');
-    let nextPlayer = (activePlayer + 1) % ctx.numPlayers;
-    ctx.events.setActivePlayers( { value : { [ nextPlayer] : 'tradeAndHire' } } );
-  }
-}
-
 function BeginTurn(G, ctx) {
-  ctx.events.setStage('discover');
-}
+  let turnmod = (ctx.turn - 1) % (ctx.numPlayers * (ctx.numPlayers + 1));
 
-function EndTurn(G, ctx) {
-  G.discardPile = G.discardPile.concat(G.harborDisplayNonShips);
-  G.harborDisplayNonShips = [];
-  G.discardPile = G.discardPile.concat(G.harborDisplayShips);
-  G.harborDisplayShips = [];
+  if (turnmod === ctx.currentPlayer * (1 + ctx.numPlayers)) {
+    G.activePlayer = ctx.currentPlayer;
+    // Start with discover followed by trade&hire
+    ctx.events.setStage('discover');
+  } else if (turnmod === ctx.currentPlayer * (1 + ctx.numPlayers) + ctx.numPlayers) {
+    // Discard harbor display cards and end turn
+    G.discardPile = G.discardPile.concat(G.harborDisplayNonShips);
+    G.harborDisplayNonShips = [];
+    G.discardPile = G.discardPile.concat(G.harborDisplayShips);
+    G.harborDisplayShips = [];
+    // We somehow should end the turn
+    ctx.events.endTurn();
+  } else {
+    // Only trade&hire
+    ctx.events.setStage('tradeAndHire');
+  }
 }
 
 const PortRoyal = {
@@ -219,6 +229,7 @@ const PortRoyal = {
       { type: 'TaxIncrease', subtype: 'minVictoryPoints', imageFilename: 'card_zoom-116.png' },
       { type: 'TaxIncrease', subtype: 'maxSwords', imageFilename: 'card_zoom-118.png' },
     ]),
+    activePlayer: 0,
     playerDisplays: Array(ctx.numPlayers).fill([]),
     playerCoins: Array(ctx.numPlayers).fill(0),
     playerSwords: Array(ctx.numPlayers).fill(0),
@@ -231,27 +242,21 @@ const PortRoyal = {
 
   turn: {
     onBegin: BeginTurn,
-    onEnd: EndTurn,
 
     stages: {
       discover: {
-        moves: { DrawCard, GetCoins, EndDiscover },
+        moves: { DrawCard, GetCoins },
         next: 'tradeAndHire',
       },
 
       tradeAndHire: {
-        moves: { HirePerson, TradeShip, EndTradeAndHire },
+        moves: { HirePerson, TradeShip },
       },
     },
   },
 
   moves: {
     ShuffleDrawPile,
-  },
-
-  events: {
-    endStage: false,
-    endTurn: false,
   },
 };
 
