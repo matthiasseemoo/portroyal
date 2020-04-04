@@ -17,8 +17,8 @@ function GetCoins(G, ctx, amount) {
 }
 
 function TradeShip(G, ctx, cardIndex) {
-  if (cardIndex < G.harborDisplayShips.length) {
-    // Add coins to player
+  if ((G.drawCount > 0) && (cardIndex < G.harborDisplayShips.length)) {
+    // Add coins to player and check whether there are cards to take
     G.playerCoins = G.playerCoins.slice();
     G.playerCoins[ctx.currentPlayer] += G.harborDisplayShips[cardIndex].coins;
 
@@ -34,13 +34,18 @@ function TradeShip(G, ctx, cardIndex) {
     // Remove ship from harbor display
     G.harborDisplayShips = G.harborDisplayShips.slice();
     G.harborDisplayShips.splice(cardIndex, 1);
+
+    // Reduce counter of cards that could be taken
+    G.drawCount--;
   }
 }
 
 function HirePerson(G, ctx, cardIndex) {
-  if (cardIndex < G.harborDisplayNonShips.length) {
+  // Check whether another card can be taken and check whether there are cards to take
+  if ((G.drawCount > 0) && (cardIndex < G.harborDisplayNonShips.length)) {
     let hiredPerson = G.harborDisplayNonShips[cardIndex];
-    let extracost = G.activePlayer === ctx.currentPlayer ? 0 : 1;
+    let extracost = -G.playerNumMademoiselles[ctx.currentPlayer];
+    if (G.activePlayer === ctx.currentPlayer) extracost += 1;
 
     if (hiredPerson.hireingCosts + extracost <= G.playerCoins[ctx.currentPlayer]) {
       // Remove Person from harbor display
@@ -68,6 +73,22 @@ function HirePerson(G, ctx, cardIndex) {
         G.playerCoins[ctx.currentPlayer]--;
         G.playerCoins[G.activePlayer]++;
       }
+
+      // Count persons with special abilities
+      if (hiredPerson.subtype === 'Govenor') {
+        G.playerNumGovenors = G.playerNumGovenors.slice();
+        G.playerNumGovenors[ctx.currentPlayer]++;
+        G.drawCount++;
+      } else if (hiredPerson.subtype === 'Mademoiselle') {
+        G.playerNumMademoiselles = G.playerNumMademoiselles.slice();
+        G.playerNumMademoiselles[ctx.currentPlayer]++;
+      } else if (hiredPerson.subtype === 'Jester') {
+        G.playerNumJesters = G.playerNumJesters.slice();
+        G.playerNumJesters[ctx.currentPlayer]++;
+      }
+
+      // Reduce counter of cards that could be taken
+      G.drawCount--;
     }
   }
 }
@@ -95,6 +116,11 @@ function DrawCard(G, ctx) {
       G.harborDisplayNonShips = [];
       G.discardPile = G.discardPile.concat(G.harborDisplayShips);
       G.harborDisplayShips = [];
+      // Get one coin for each Jester
+      if (G.playerNumJesters > 0) {
+        G.playerCoins = G.playerCoins.slice();
+        G.playerCoins[ctx.currentPlayer] += G.playerNumJesters[ctx.currentPlayer];
+      }
       ctx.events.endTurn();
     } else {
       G.harborDisplayShips  = G.harborDisplayShips.concat([drawnCard]);
@@ -145,6 +171,13 @@ function DrawCard(G, ctx) {
 function BeginTurn(G, ctx) {
   let turnmod = (ctx.turn - 1) % (ctx.numPlayers * (ctx.numPlayers + 1));
 
+  // Count how many cards a player can draw
+  G.drawCount = 1;
+  G.drawCount += G.playerNumGovenors[ctx.currentPlayer];
+  if ((ctx.currentPlayer === G.activePlayer) && (G.harborDisplayShips.length >= 4)) {
+    G.drawCount += G.harborDisplayShips.length - 3;
+  }
+
   if (turnmod === ctx.currentPlayer * (1 + ctx.numPlayers)) {
     G.activePlayer = ctx.currentPlayer;
     // Start with discover followed by trade&hire
@@ -158,6 +191,11 @@ function BeginTurn(G, ctx) {
     // We somehow should end the turn
     ctx.events.endTurn();
   } else {
+    // Get one coin for each Jester
+    if ((G.playerNumJesters > 0) && (G.harborDisplayShips === 0) && (G.harborDisplayNonShips === 0)) {
+      G.playerCoins = G.playerCoins.slice();
+      G.playerCoins[ctx.currentPlayer] += G.playerNumJesters[ctx.currentPlayer];
+    }
     // Only trade&hire
     ctx.events.setStage('tradeAndHire');
   }
@@ -230,10 +268,14 @@ const PortRoyal = {
       { type: 'TaxIncrease', subtype: 'maxSwords', imageFilename: 'card_zoom-118.png' },
     ]),
     activePlayer: 0,
+    drawCount: 0,
     playerDisplays: Array(ctx.numPlayers).fill([]),
     playerCoins: Array(ctx.numPlayers).fill(0),
     playerSwords: Array(ctx.numPlayers).fill(0),
     playerVictoryPoints: Array(ctx.numPlayers).fill(0),
+    playerNumGovenors: Array(ctx.numPlayers).fill(0),
+    playerNumMademoiselles: Array(ctx.numPlayers).fill(0),
+    playerNumJesters: Array(ctx.numPlayers).fill(0),
     harborDisplayShips: [],
     harborDisplayNonShips: [],
     expeditionDisplay: [],
