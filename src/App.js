@@ -17,6 +17,10 @@ function GetCoins(G, ctx, amount) {
 }
 
 function TradeShip(G, ctx, cardIndex) {
+  if (ctx.activePlayers[0] === 'discover') {
+    ctx.events.setStage('tradeAndHire');
+  }
+
   if (cardIndex < G.harborDisplayShips.length) {
     // Add coins to player
     G.playerCoins = G.playerCoins.slice();
@@ -32,6 +36,10 @@ function TradeShip(G, ctx, cardIndex) {
 }
 
 function HirePerson(G, ctx, cardIndex) {
+  if (ctx.activePlayers[0] === 'discover') {
+    ctx.events.setStage('tradeAndHire');
+  }
+
   if (cardIndex < G.harborDisplayNonShips.length) {
     let hiredPerson = G.harborDisplayNonShips[cardIndex];
 
@@ -78,10 +86,6 @@ function DrawCard(G, ctx) {
 
     if (discardHarborDisplay) {
       G.discardPile = G.discardPile.concat([drawnCard]);
-      G.discardPile = G.discardPile.concat(G.harborDisplayNonShips);
-      G.harborDisplayNonShips = new Array();
-      G.discardPile = G.discardPile.concat(G.harborDisplayShips);
-      G.harborDisplayShips = new Array();
       ctx.events.endTurn();
     } else {
       G.harborDisplayShips  = G.harborDisplayShips.concat([drawnCard]);
@@ -130,22 +134,14 @@ function DrawCard(G, ctx) {
 }
 
 function BeginTurn(G, ctx) {
-  let turnmod = (ctx.turn - 1) % (ctx.numPlayers * (ctx.numPlayers + 1));
+  ctx.events.setStage('discover');
+}
 
-  if (turnmod == ctx.currentPlayer * (1 + ctx.numPlayers)) {
-    // Start with discover followed by trade&hire
-    ctx.events.setStage('discover');
-  } else if (turnmod == ctx.currentPlayer * (1 + ctx.numPlayers) + ctx.numPlayers) {
-    // Discard harbor display cards and end turn
-    G.discardPile = G.discardPile.concat(G.harborDisplayNonShips);
-    G.harborDisplayNonShips = new Array();
-    G.discardPile = G.discardPile.concat(G.harborDisplayShips);
-    G.harborDisplayShips = new Array();
-    // We somehow should end the turn
-  } else {
-    // Only trade&hire
-    ctx.events.setStage('tradeAndHire');
-  }
+function EndTurn(G, ctx) {
+  G.discardPile = G.discardPile.concat(G.harborDisplayNonShips);
+  G.harborDisplayNonShips = new Array();
+  G.discardPile = G.discardPile.concat(G.harborDisplayShips);
+  G.harborDisplayShips = new Array();
 }
 
 const PortRoyal = {
@@ -226,10 +222,11 @@ const PortRoyal = {
 
   turn: {
     onBegin: BeginTurn,
+    onEnd: EndTurn,
 
     stages: {
       discover: {
-        moves: { DrawCard, GetCoins },
+        moves: { DrawCard, GetCoins, HirePerson, TradeShip },
         next: 'tradeAndHire',
       },
 
