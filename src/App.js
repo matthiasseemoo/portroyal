@@ -105,7 +105,7 @@ function DrawCard(G, ctx) {
 
     if (drawnCard.subtype === 'minVictoryPoints') {
       for (let i = 0; i < ctx.numPlayers; i++) {
-        if (G.playerVictoryPoints[i] == minVictoryPoints) {
+        if (G.playerVictoryPoints[i] === minVictoryPoints) {
           newPlayerCoins[i]++;
         }
       }
@@ -113,7 +113,7 @@ function DrawCard(G, ctx) {
 
     if (drawnCard.subtype === 'maxSwords') {
       for (let i = 0; i < ctx.numPlayers; i++) {
-        if (G.playerSwords[i] == maxSwords) {
+        if (G.playerSwords[i] === maxSwords) {
           newPlayerCoins[i]++;
         }
       }
@@ -125,15 +125,32 @@ function DrawCard(G, ctx) {
   }
 }
 
+function EndDiscover(G, ctx) {
+  ctx.events.endStage();
+}
+
+function EndTradeAndHire(G, ctx) {
+  let activePlayer = Object.getOwnPropertyNames(ctx.activePlayers)[0];
+  // if the last player finished tradeAndHire, end the turn
+  if (ctx.currentPlayer + ctx.numPlayers - 1 === activePlayer) {
+    alert('1');
+//    ctx.events.endStage();
+  } else {
+    alert('2');
+    let nextPlayer = (activePlayer + 1) % ctx.numPlayers;
+    ctx.events.setActivePlayers( { value : { [ nextPlayer] : 'tradeAndHire' } } );
+  }
+}
+
 function BeginTurn(G, ctx) {
   ctx.events.setStage('discover');
 }
 
 function EndTurn(G, ctx) {
   G.discardPile = G.discardPile.concat(G.harborDisplayNonShips);
-  G.harborDisplayNonShips = new Array();
+  G.harborDisplayNonShips = [];
   G.discardPile = G.discardPile.concat(G.harborDisplayShips);
-  G.harborDisplayShips = new Array();
+  G.harborDisplayShips = [];
 }
 
 const PortRoyal = {
@@ -202,14 +219,14 @@ const PortRoyal = {
       { type: 'TaxIncrease', subtype: 'minVictoryPoints', imageFilename: 'card_zoom-116.png' },
       { type: 'TaxIncrease', subtype: 'maxSwords', imageFilename: 'card_zoom-118.png' },
     ]),
-    playerDisplays: Array(ctx.numPlayers).fill(Array()),
+    playerDisplays: Array(ctx.numPlayers).fill([]),
     playerCoins: Array(ctx.numPlayers).fill(0),
     playerSwords: Array(ctx.numPlayers).fill(0),
     playerVictoryPoints: Array(ctx.numPlayers).fill(0),
-    harborDisplayShips: Array(),
-    harborDisplayNonShips: Array(),
-    expeditionDisplay: Array(),
-    discardPile: Array(),
+    harborDisplayShips: [],
+    harborDisplayNonShips: [],
+    expeditionDisplay: [],
+    discardPile: [],
   }),
 
   turn: {
@@ -218,18 +235,23 @@ const PortRoyal = {
 
     stages: {
       discover: {
-        moves: { DrawCard, GetCoins },
+        moves: { DrawCard, GetCoins, EndDiscover },
         next: 'tradeAndHire',
       },
 
       tradeAndHire: {
-        moves: { HirePerson, TradeShip },
+        moves: { HirePerson, TradeShip, EndTradeAndHire },
       },
     },
   },
 
   moves: {
     ShuffleDrawPile,
+  },
+
+  events: {
+    endStage: false,
+    endTurn: false,
   },
 };
 
