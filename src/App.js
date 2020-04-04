@@ -17,10 +17,6 @@ function GetCoins(G, ctx, amount) {
 }
 
 function TradeShip(G, ctx, cardIndex) {
-  if (ctx.activePlayers[0] === 'discover') {
-    ctx.events.setStage('tradeAndHire');
-  }
-
   if (cardIndex < G.harborDisplayShips.length) {
     // Add coins to player
     G.playerCoins = G.playerCoins.slice();
@@ -36,10 +32,6 @@ function TradeShip(G, ctx, cardIndex) {
 }
 
 function HirePerson(G, ctx, cardIndex) {
-  if (ctx.activePlayers[0] === 'discover') {
-    ctx.events.setStage('tradeAndHire');
-  }
-
   if (cardIndex < G.harborDisplayNonShips.length) {
     let hiredPerson = G.harborDisplayNonShips[cardIndex];
 
@@ -226,7 +218,7 @@ const PortRoyal = {
 
     stages: {
       discover: {
-        moves: { DrawCard, GetCoins, HirePerson, TradeShip },
+        moves: { DrawCard, GetCoins },
         next: 'tradeAndHire',
       },
 
