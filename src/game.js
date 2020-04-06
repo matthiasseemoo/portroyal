@@ -50,6 +50,10 @@ function TradeShip(G, ctx, cardIndex) {
 
     // Reduce counter of cards that could be taken
     G.drawCount--;
+
+    if (G.drawCount === 0) {
+      ctx.events.endTurn();
+    }
   }
 }
 
@@ -122,6 +126,10 @@ function HirePerson(G, ctx, cardIndex) {
 
       // Reduce counter of cards that could be taken
       G.drawCount--;
+
+      if (G.drawCount === 0) {
+        ctx.events.endTurn();
+      }
     }
   }
 }
@@ -250,9 +258,6 @@ function BeginTurn(G, ctx) {
   // Count how many cards a player can draw
   G.drawCount = 1;
   G.drawCount += G.playerNumGovenors[ctx.currentPlayer];
-  if ((ctx.currentPlayer === G.activePlayer) && (G.harborDisplayShips.length >= 4)) {
-    G.drawCount += G.harborDisplayShips.length - 3;
-  }
 
   if (turnmod === ctx.currentPlayer * (1 + ctx.numPlayers)) {
     G.activePlayer = ctx.currentPlayer;
@@ -265,7 +270,7 @@ function BeginTurn(G, ctx) {
     G.discardPile = G.discardPile.concat(G.harborDisplayShips);
     G.harborDisplayShips = [];
     // We somehow should end the turn
-    ctx.events.endTurn();
+    ctx.events.endTurn(1);
   } else {
     // Get one coin for each Jester
     if ((G.playerNumJesters > 0) && (G.harborDisplayShips === 0) && (G.harborDisplayNonShips === 0)) {
@@ -297,6 +302,9 @@ function EndStage(G, ctx) {
       G.playerCoins[ctx.currentPlayer] += G.playerNumAdmirals[ctx.currentPlayer] * 2;
     }
 
+    if (G.harborDisplayShips.length >= 4) {
+      G.drawCount += G.harborDisplayShips.length - 3;
+    }
     ctx.events.setStage('tradeAndHire');
   } else if (currentStage === 'repelShip') {
     RepelShip(G, ctx, false);
@@ -347,8 +355,8 @@ const PortRoyal = {
         { type: 'Ship', subtype: 'Skiff', swords: 1, coins : 2, color: 'green', imageFilename: 'card_zoom-69.png' },
         { type: 'Ship', subtype: 'Skiff', swords: 3, coins : 2, color: 'green', imageFilename: 'card_zoom-70.png' },
         { type: 'Ship', subtype: 'Skiff', swords: 3, coins : 3, color: 'green', imageFilename: 'card_zoom-72.png' },
-        { type: 'Ship', subtype: 'Skiff', swords: 3, coins : 5, color: 'green', imageFilename: 'card_zoom-73.png' },
-        { type: 'Ship', subtype: 'Skiff', swords: 4, coins : 5, color: 'green', imageFilename: 'card_zoom-75.png' },
+        { type: 'Ship', subtype: 'Skiff', swords: 5, coins : 3, color: 'green', imageFilename: 'card_zoom-73.png' },
+        { type: 'Ship', subtype: 'Skiff', swords: 5, coins : 4, color: 'green', imageFilename: 'card_zoom-75.png' },
         { type: 'Ship', subtype: 'Flute', swords: 1, coins : 1, color: 'blue', imageFilename: 'card_zoom-76.png' },
         { type: 'Ship', subtype: 'Flute', swords: 1, coins : 2, color: 'blue', imageFilename: 'card_zoom-79.png' },
         { type: 'Ship', subtype: 'Flute', swords: 2, coins : 2, color: 'blue', imageFilename: 'card_zoom-80.png' },

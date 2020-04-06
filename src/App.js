@@ -12,6 +12,7 @@ import Board from "./board";
 const App = Client({
   game: PortRoyal,
   board: Board,
+  numPlayers: 3,
   playerView: PlayerView.STRIP_SECRETS,
   enhancer: compose(
     applyMiddleware(logger),
