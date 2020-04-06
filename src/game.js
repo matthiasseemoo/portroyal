@@ -36,19 +36,24 @@ function TradeShip(G, ctx, cardIndex) {
 
     if (tradedShip.color === 'green') {
       G.playerCoins[ctx.currentPlayer] += G.playerNumGreenTraders[ctx.currentPlayer];
-      G.drawCount += G.playerNumGreenTraders[ctx.currentPlayer];
+      G.drawCount += G.playerNumGreenClerks[ctx.currentPlayer];
+      G.playerVictoryPoints += G.playerNumGreenWholeSalers[ctx.currentPlayer];
     } else if (tradedShip.color === 'blue') {
       G.playerCoins[ctx.currentPlayer] += G.playerNumBlueTraders[ctx.currentPlayer];
-      G.drawCount += G.playerNumBlueTraders[ctx.currentPlayer];
+      G.drawCount += G.playerNumBlueClerks[ctx.currentPlayer];
+      G.playerVictoryPoints += G.playerNumBlueWholeSalers[ctx.currentPlayer];
     } else if (tradedShip.color === 'red') {
       G.playerCoins[ctx.currentPlayer] += G.playerNumRedTraders[ctx.currentPlayer];
-      G.drawCount += G.playerNumRedTraders[ctx.currentPlayer];
+      G.drawCount += G.playerNumRedClerks[ctx.currentPlayer];
+      G.playerVictoryPoints += G.playerNumRedWholeSalers[ctx.currentPlayer];
     } else if (tradedShip.color === 'black') {
       G.playerCoins[ctx.currentPlayer] += G.playerNumBlackTraders[ctx.currentPlayer];
-      G.drawCount += G.playerNumBlackTraders[ctx.currentPlayer];
+      G.drawCount += G.playerNumBlackClerks[ctx.currentPlayer];
+      G.playerVictoryPoints += G.playerNumBlackWholeSalers[ctx.currentPlayer];
     } else if (tradedShip.color === 'yellow') {
       G.playerCoins[ctx.currentPlayer] += G.playerNumYellowTraders[ctx.currentPlayer];
-      G.drawCount += G.playerNumYellowTraders[ctx.currentPlayer];
+      G.drawCount += G.playerNumYellowClerks[ctx.currentPlayer];
+      G.playerVictoryPoints += G.playerNumYellowWholeSalers[ctx.currentPlayer];
     }
     
     // Add Ship to discard pile
@@ -121,6 +126,9 @@ function HirePerson(G, ctx, cardIndex) {
       } else if (hiredPerson.subtype === 'Gunner') {
         G.playerNumGunners = G.playerNumGunners.slice();
         G.playerNumGunners[ctx.currentPlayer]++;
+      } else if (hiredPerson.subtype === 'Gambler') {
+        G.playerNumGamblers = G.playerNumGamblers.slice();
+        G.playerNumGamblers[ctx.currentPlayer]++;
       } else if (hiredPerson.subtype === 'Trader') {
         if (hiredPerson.color === 'green') {
           G.playerNumGreenTraders = G.playerNumGreenTraders.slice();
@@ -154,6 +162,23 @@ function HirePerson(G, ctx, cardIndex) {
         } else if (hiredPerson.color === 'yellow') {
           G.playerNumYellowClerks = G.playerNumYellowClerks.slice();
           G.playerNumYellowClerks[ctx.currentPlayer]++;
+        }
+      } else if (hiredPerson.subtype === 'Whole Saler') {
+        if (hiredPerson.color === 'green') {
+          G.playerNumGreenWholeSalers = G.playerNumGreenWholeSalers.slice();
+          G.playerNumGreenWholeSalers[ctx.currentPlayer]++;
+        } else if (hiredPerson.color === 'blue') {
+          G.playerNumBlueWholeSalers = G.playerNumBlueWholeSalers.slice();
+          G.playerNumBlueWholeSalers[ctx.currentPlayer]++;
+        } else if (hiredPerson.color === 'red') {
+          G.playerNumRedWholeSalers = G.playerNumRedWholeSalers.slice();
+          G.playerNumRedWholeSalers[ctx.currentPlayer]++;
+        } else if (hiredPerson.color === 'black') {
+          G.playerNumBlackWholeSalers = G.playerNumBlackWholeSalers.slice();
+          G.playerNumBlackWholeSalers[ctx.currentPlayer]++;
+        } else if (hiredPerson.color === 'yellow') {
+          G.playerNumYellowWholeSalers = G.playerNumYellowWholeSalers.slice();
+          G.playerNumYellowWholeSalers[ctx.currentPlayer]++;
         }
       }
 
@@ -539,11 +564,11 @@ const PortRoyal = {
         { type: 'Person', subtype: 'Gambler', victoryPoints: 1, hireingCosts : 4, imageFilename: 'card_zoom-149.png', game: 'gambler' },
         { type: 'Person', subtype: 'Gambler', victoryPoints: 2, hireingCosts : 6, imageFilename: 'card_zoom-151.png', game: 'gambler' },
         { type: 'Person', subtype: 'Gambler', victoryPoints: 3, hireingCosts : 8, imageFilename: 'card_zoom-152.png', game: 'gambler' },
-        { type: 'Person', subtype: 'WholeSaler', victoryPoints: 2, hireingCosts : 6, color: 'green', imageFilename: 'card_zoom-153.png', game: 'unterwegs' },
-        { type: 'Person', subtype: 'WholeSaler', victoryPoints: 3, hireingCosts : 8, color: 'blue', imageFilename: 'card_zoom-154.png', game: 'unterwegs' },
-        { type: 'Person', subtype: 'WholeSaler', victoryPoints: 2, hireingCosts : 6, color: 'red', imageFilename: 'card_zoom-155.png', game: 'unterwegs' },
-        { type: 'Person', subtype: 'WholeSaler', victoryPoints: 2, hireingCosts : 6, color: 'black', imageFilename: 'card_zoom-156.png', game: 'unterwegs' },
-        { type: 'Person', subtype: 'WholeSaler', victoryPoints: 3, hireingCosts : 8, color: 'yellow', imageFilename: 'card_zoom-157.png', game: 'unterwegs' },
+        { type: 'Person', subtype: 'Whole Saler', victoryPoints: 2, hireingCosts : 6, color: 'green', imageFilename: 'card_zoom-153.png', game: 'unterwegs' },
+        { type: 'Person', subtype: 'Whole Saler', victoryPoints: 3, hireingCosts : 8, color: 'blue', imageFilename: 'card_zoom-154.png', game: 'unterwegs' },
+        { type: 'Person', subtype: 'Whole Saler', victoryPoints: 2, hireingCosts : 6, color: 'red', imageFilename: 'card_zoom-155.png', game: 'unterwegs' },
+        { type: 'Person', subtype: 'Whole Saler', victoryPoints: 2, hireingCosts : 6, color: 'black', imageFilename: 'card_zoom-156.png', game: 'unterwegs' },
+        { type: 'Person', subtype: 'Whole Saler', victoryPoints: 3, hireingCosts : 8, color: 'yellow', imageFilename: 'card_zoom-157.png', game: 'unterwegs' },
       ]),
     },
     activePlayer: 0,
@@ -558,6 +583,7 @@ const PortRoyal = {
     playerNumAdmirals: Array(ctx.numPlayers).fill(0),
     playerNumViceAdmirals: Array(ctx.numPlayers).fill(0),
     playerNumGunners: Array(ctx.numPlayers).fill(0),
+    playerNumGamblers: Array(ctx.numPlayers).fill(0),
     playerNumGreenTraders: Array(ctx.numPlayers).fill(0),
     playerNumBlueTraders: Array(ctx.numPlayers).fill(0),
     playerNumRedTraders: Array(ctx.numPlayers).fill(0),
@@ -568,6 +594,11 @@ const PortRoyal = {
     playerNumRedClerks: Array(ctx.numPlayers).fill(0),
     playerNumBlackClerks: Array(ctx.numPlayers).fill(0),
     playerNumYellowClerks: Array(ctx.numPlayers).fill(0),
+    playerNumGreenWholeSalers: Array(ctx.numPlayers).fill(0),
+    playerNumBlueWholeSalers: Array(ctx.numPlayers).fill(0),
+    playerNumRedWholeSalers: Array(ctx.numPlayers).fill(0),
+    playerNumBlackWholeSalers: Array(ctx.numPlayers).fill(0),
+    playerNumYellowWholeSalers: Array(ctx.numPlayers).fill(0),
     harborDisplayShips: [],
     harborDisplayNonShips: [],
     shipToRepel: null,

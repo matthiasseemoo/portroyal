@@ -97,6 +97,8 @@ class Board extends React.Component {
               Vice Admirals: {this.props.G.playerNumViceAdmirals[i]},
               Gunners: {this.props.G.playerNumGunners[i]},
               Clerks: {this.props.G.playerNumGreenClerks[i] + this.props.G.playerNumBlueClerks[i] + this.props.G.playerNumRedClerks[i] + this.props.G.playerNumBlackClerks[i] + this.props.G.playerNumYellowClerks[i]},
+              Whole Salers: {this.props.G.playerNumGreenWholeSalers[i] + this.props.G.playerNumBlueWholeSalers[i] + this.props.G.playerNumRedWholeSalers[i] + this.props.G.playerNumBlackWholeSalers[i] + this.props.G.playerNumYellowWholeSalers[i]},
+              Gamblers: {this.props.G.playerNumGamblers[i]},
               active: {(parseInt(this.props.G.activePlayer) === i) ? 'yes' : 'no'},
               currently playing: {(parseInt(this.props.ctx.currentPlayer) === i) ? 'yes' : 'no'}
             </h1>
@@ -129,7 +131,9 @@ class Board extends React.Component {
             Traders: {this.props.G.playerNumGreenTraders[this.props.playerID] + this.props.G.playerNumBlueTraders[this.props.playerID] + this.props.G.playerNumRedTraders[this.props.playerID] + this.props.G.playerNumBlackTraders[this.props.playerID] + this.props.G.playerNumYellowTraders[this.props.playerID]},
             Vice Admirals: {this.props.G.playerNumViceAdmirals[this.props.playerID]},
             Gunners: {this.props.G.playerNumGunners[this.props.playerID]},
-            Clerks: {this.props.G.playerNumGreenClerks[this.props.playerID] + this.props.G.playerNumBlueClerks[this.props.playerID] + this.props.G.playerNumRedClerks[this.props.playerID] + this.props.G.playerNumBlackClerks[this.props.playerID] + this.props.G.playerNumYellowClerks[this.props.playerID]},
+            Clerks: {this.props.G.playerNumGreenClerks[this.props.playerID] + this.props.G.playerNumBlueWholeSalers[this.props.playerID] + this.props.G.playerNumRedWholeSalers[this.props.playerID] + this.props.G.playerNumBlackWholeSalers[this.props.playerID] + this.props.G.playerNumYellowWholeSalers[this.props.playerID]},
+            Whole Salers: {this.props.G.playerNumGreenWholeSalers[this.props.playerID] + this.props.G.playerNumBlueClerks[this.props.playerID] + this.props.G.playerNumRedClerks[this.props.playerID] + this.props.G.playerNumBlackClerks[this.props.playerID] + this.props.G.playerNumYellowClerks[this.props.playerID]},
+            Gamblers: {this.props.G.playerNumGamblers[this.props.playerID]},
             active: {(this.props.G.activePlayer === this.props.playerID) ? 'yes' : 'no'},
             currently playing: {(this.props.ctx.currentPlayer === this.props.playerID) ? 'yes' : 'no'}
           </h1>
