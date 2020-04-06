@@ -2,3 +2,16 @@
 	font-family: 'Romance Fatal Serif Std';
 	font-size: 1em;
 }
+
+.card {
+	display: inline;
+	vertical-align: middle;
+}
+
+.cardImage, .cardImageSmall {
+	height: 8em;
+}
+
+.cardImage:hover, .cardImageLarge {
+	height: 12em;
+}
