@@ -1,4 +1,5 @@
 import { PlayerView } from 'boardgame.io/core';
+import { INVALID_MOVE } from 'boardgame.io/core';
 
 // TODO: expedition
 // TODO: ships with extra coins
@@ -228,85 +229,104 @@ function RepelShip(G, ctx, doRepel) {
   }
 }
 
-function DrawCard(G, ctx) {
-  // TODO: slice?
-  let drawnCard = G.secret.drawPile[0];
-  G.secret.drawPile = G.secret.drawPile.slice(1);
+function DrawCardGambling(G, ctx, gambling) {
+  if ((G.gambleCount > 0) && !((gambling === true) || (gambling === 1))) {
+    // only gambling is allowed
+    return INVALID_MOVE;
+  }
 
-  if (drawnCard.type === 'Expedition') {
-    G.expeditionDisplay = G.expeditionDisplay.concat([drawnCard]);
-  } else if (drawnCard.type === 'Person') {
-    G.harborDisplayNonShips = G.harborDisplayNonShips.concat([drawnCard]);
-  } else if (drawnCard.type === 'Ship') {
-    if (drawnCard.swords <= G.playerSwords[ctx.currentPlayer]) {
-      G.shipToRepel = drawnCard;
-      ctx.events.setStage('repelShip');
+  let drawAmount = 1;
+  if ((gambling === true) || (gambling === 1)) {
+    if (G.gambleCount < G.playerNumGamblers[ctx.currentPlayer]) {
+      drawAmount = 4;
+      G.gambleCount++;
     } else {
-      let discardHarborDisplay = false;
-      
-      for (const ship of G.harborDisplayShips) {
-        if (ship.color === drawnCard.color) {
-          discardHarborDisplay = true;
-          break;
-        }
-      }
+      // not enough Gamblers to gamble again
+      return INVALID_MOVE;
+    }
+  }
 
-      if (discardHarborDisplay) {
-        G.discardPile = G.discardPile.concat([drawnCard]);
-        G.discardPile = G.discardPile.concat(G.harborDisplayNonShips);
-        G.harborDisplayNonShips = [];
-        G.discardPile = G.discardPile.concat(G.harborDisplayShips);
-        G.harborDisplayShips = [];
-        // Get one coin for each Jester
-        if (G.playerNumJesters > 0) {
-          G.playerCoins = G.playerCoins.slice();
-          G.playerCoins[ctx.currentPlayer] += G.playerNumJesters[ctx.currentPlayer];
-        }
-        ctx.events.endTurn();
+  let discardHarborDisplay = false;
+  for (let d = 0; d < drawAmount; d++) {
+    // TODO: slice?
+    let drawnCard = G.secret.drawPile[0];
+    G.secret.drawPile = G.secret.drawPile.slice(1);
+
+    if (drawnCard.type === 'Expedition') {
+      G.expeditionDisplay = G.expeditionDisplay.concat([drawnCard]);
+    } else if (drawnCard.type === 'Person') {
+      G.harborDisplayNonShips = G.harborDisplayNonShips.concat([drawnCard]);
+    } else if (drawnCard.type === 'Ship') {
+      // ships can only be repelled before the gambler is played
+      if ((G.gambleCount === 0) && (drawnCard.swords <= G.playerSwords[ctx.currentPlayer])) {
+        G.shipToRepel = drawnCard;
+        ctx.events.setStage('repelShip');
       } else {
-        G.harborDisplayShips  = G.harborDisplayShips.concat([drawnCard]);
-      }
-    }
-  } else if (drawnCard.type === 'TaxIncrease') {
-    let minVictoryPoints = Infinity;
-    let maxSwords = 0;
+        for (const ship of G.harborDisplayShips) {
+          if (ship.color === drawnCard.color) {
+            discardHarborDisplay = true;
+            break;
+          }
+        }
 
-    let newPlayerCoins = G.playerCoins.slice();
-
-    // Count min. victory points and max. swords and remove cards from players with more than or equal to 12 cards
-    for (let i = 0; i < ctx.numPlayers; i++) {
-      if (G.playerVictoryPoints[i] < minVictoryPoints) {
-        minVictoryPoints = G.playerVictoryPoints[i];
-      }
-
-      if (G.playerSwords[i] > maxSwords) {
-        maxSwords = G.playerSwords[i];
-      }
-
-      if (G.playerCoins[i] >= 12) {
-        newPlayerCoins[i] = Math.round(G.playerCoins[i] / 2);
-      }
-    }
-
-    if (drawnCard.subtype === 'minVictoryPoints') {
-      for (let i = 0; i < ctx.numPlayers; i++) {
-        if (G.playerVictoryPoints[i] === minVictoryPoints) {
-          newPlayerCoins[i]++;
+        // only discard cards if we have drawn the last card that had to be drawn
+        if (discardHarborDisplay && (d === (drawAmount - 1))) {
+          G.discardPile = G.discardPile.concat([drawnCard]);
+          G.discardPile = G.discardPile.concat(G.harborDisplayNonShips);
+          G.harborDisplayNonShips = [];
+          G.discardPile = G.discardPile.concat(G.harborDisplayShips);
+          G.harborDisplayShips = [];
+          // Get one coin for each Jester
+          if (G.playerNumJesters > 0) {
+            G.playerCoins = G.playerCoins.slice();
+            G.playerCoins[ctx.currentPlayer] += G.playerNumJesters[ctx.currentPlayer];
+          }
+          ctx.events.endTurn();
+        } else {
+          G.harborDisplayShips  = G.harborDisplayShips.concat([drawnCard]);
         }
       }
-    }
+    } else if (drawnCard.type === 'TaxIncrease') {
+      let minVictoryPoints = Infinity;
+      let maxSwords = 0;
 
-    if (drawnCard.subtype === 'maxSwords') {
+      let newPlayerCoins = G.playerCoins.slice();
+
+      // Count min. victory points and max. swords and remove cards from players with more than or equal to 12 cards
       for (let i = 0; i < ctx.numPlayers; i++) {
-        if (G.playerSwords[i] === maxSwords) {
-          newPlayerCoins[i]++;
+        if (G.playerVictoryPoints[i] < minVictoryPoints) {
+          minVictoryPoints = G.playerVictoryPoints[i];
+        }
+
+        if (G.playerSwords[i] > maxSwords) {
+          maxSwords = G.playerSwords[i];
+        }
+
+        if (G.playerCoins[i] >= 12) {
+          newPlayerCoins[i] = Math.round(G.playerCoins[i] / 2);
         }
       }
+
+      if (drawnCard.subtype === 'minVictoryPoints') {
+        for (let i = 0; i < ctx.numPlayers; i++) {
+          if (G.playerVictoryPoints[i] === minVictoryPoints) {
+            newPlayerCoins[i]++;
+          }
+        }
+      }
+
+      if (drawnCard.subtype === 'maxSwords') {
+        for (let i = 0; i < ctx.numPlayers; i++) {
+          if (G.playerSwords[i] === maxSwords) {
+            newPlayerCoins[i]++;
+          }
+        }
+      }
+
+      G.playerCoins = newPlayerCoins;
+
+      G.discardPile = G.discardPile.concat([drawnCard]);
     }
-
-    G.playerCoins = newPlayerCoins;
-
-    G.discardPile = G.discardPile.concat([drawnCard]);
   }
 }
 
@@ -316,6 +336,9 @@ function BeginTurn(G, ctx) {
   // Count how many cards a player can draw
   G.drawCount = 1;
   G.drawCount += G.playerNumGovenors[ctx.currentPlayer];
+
+  // Reset counter for gambling rounds
+  G.gambleCount = 0;
 
   if (turnmod === ctx.currentPlayer * (1 + ctx.numPlayers)) {
     G.activePlayer = ctx.currentPlayer;
@@ -363,7 +386,7 @@ function BeginTurn(G, ctx) {
 function EndStage(G, ctx) {
   let currentStage = ctx.activePlayers[ctx.currentPlayer];
 
-  if (currentStage === 'discover') {
+  if ((currentStage === 'discover') || (currentStage === 'gambling')) {
     // tradeAndHire onBegin equivalent (only for the currentPlayer)
     let numCardsInHarborDisplays = G.harborDisplayShips.length + G.harborDisplayNonShips.length;
     // Get two coins for each Admiral if 5 or more cards in harbor display
@@ -573,6 +596,7 @@ const PortRoyal = {
     },
     activePlayer: 0,
     drawCount: 0,
+    gambleCount: 0,
     playerDisplays: Array(ctx.numPlayers).fill([]),
     playerCoins: Array(ctx.numPlayers).fill(0),
     playerSwords: Array(ctx.numPlayers).fill(0),
@@ -611,7 +635,7 @@ const PortRoyal = {
 
     stages: {
       discover: {
-        moves: { EndStage, DrawCard, DbgGetCoins, DbgGetSwords },
+        moves: { EndStage, DrawCardGambling, DbgGetCoins, DbgGetSwords },
         next: 'tradeAndHire',
       },
 

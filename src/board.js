@@ -115,7 +115,11 @@ class Board extends React.Component {
       let playerDisplay = [];
       if (this.props.playerID !== null) {
         for (let i = 0; i < this.props.G.playerDisplays[this.props.playerID].length; i++) {
-          playerDisplay.push(<li className='card'><img className='cardImage' src={require('./images/' + this.props.G.playerDisplays[this.props.playerID][i].imageFilename)} /></li>);
+          if (this.props.G.playerDisplays[this.props.playerID][i].subtype === 'Gambler') {
+            playerDisplay.push(<li className='card'><img className='cardImage' src={require('./images/' + this.props.G.playerDisplays[this.props.playerID][i].imageFilename)} onClick={() => this.props.moves.DrawCardGambling(true)} /></li>);
+          } else {
+            playerDisplay.push(<li className='card'><img className='cardImage' src={require('./images/' + this.props.G.playerDisplays[this.props.playerID][i].imageFilename)} /></li>);
+          }
         }
       }
       activePlayerDisplay.push(
@@ -159,7 +163,7 @@ class Board extends React.Component {
               <div style={{ display: 'inline-block', verticalAlign: 'top' }}>
                 <h1>Draw Pile</h1>
                 <ul style={{ paddingInlineStart: '0' }}>
-                  <li className='card'><img className='cardImageSmall' src={require('./images/cardback.png')} onClick={() => this.props.moves.DrawCard()} /></li>
+                  <li className='card'><img className='cardImageSmall' src={require('./images/cardback.png')} onClick={() => this.props.moves.DrawCardGambling(false)} /></li>
                 </ul>
               </div>
               <div style={{ display: 'inline-block', paddingInlineStart: '2em', verticalAlign: 'top' }}>
