@@ -85,7 +85,21 @@ class Board extends React.Component {
         }
         otherPlayerDisplays.push(
           <div>
-            <h1>Player {i}, <img style={{ height: '1em' }} src={require('./images/points.png')} />: {this.props.G.playerVictoryPoints[i]}, <img style={{ height: '1em' }} src={require('./images/coin.png')} />: {this.props.G.playerCoins[i]}, Swords: {this.props.G.playerSwords[i]}, Active: {(parseInt(this.props.G.activePlayer) === i) ? 'yes' : 'no'}, currently playing: {(parseInt(this.props.ctx.currentPlayer) === i) ? 'yes' : 'no'}</h1>
+            <h1>Player {i},
+              <img style={{ height: '1em' }} src={require('./images/points.png')} />: {this.props.G.playerVictoryPoints[i]},
+              <img style={{ height: '1em' }} src={require('./images/coin.png')} />: {this.props.G.playerCoins[i]},
+              Swords: {this.props.G.playerSwords[i]},
+              Admirals: {this.props.G.playerNumAdmirals[i]},
+              Jesters: {this.props.G.playerNumJesters[i]},
+              Mademoiselles: {this.props.G.playerNumMademoiselles[i]},
+              Govenors: {this.props.G.playerNumGovenors[i]},
+              Traders: {this.props.G.playerNumGreenTraders[i] + this.props.G.playerNumBlueTraders[i] + this.props.G.playerNumRedTraders[i] + this.props.G.playerNumBlackTraders[i] + this.props.G.playerNumYellowTraders[i]},
+              Vice Admirals: {this.props.G.playerNumViceAdmirals[i]},
+              Gunners: {this.props.G.playerNumGunners[i]},
+              Clerks: {this.props.G.playerNumGreenClerks[i] + this.props.G.playerNumBlueClerks[i] + this.props.G.playerNumRedClerks[i] + this.props.G.playerNumBlackClerks[i] + this.props.G.playerNumYellowClerks[i]},
+              active: {(parseInt(this.props.G.activePlayer) === i) ? 'yes' : 'no'},
+              currently playing: {(parseInt(this.props.ctx.currentPlayer) === i) ? 'yes' : 'no'}
+            </h1>
             <ul style={{ overflow: 'auto', whiteSpace: 'nowrap' }}>
               {playerDisplay}
             </ul>
@@ -104,7 +118,21 @@ class Board extends React.Component {
       }
       activePlayerDisplay.push(
         <div>
-          <h1>Player {this.props.playerID}, <img style={{ height: '1em' }} src={require('./images/points.png')} />: {this.props.G.playerVictoryPoints[this.props.playerID]}, <img style={{ height: '1em' }} src={require('./images/coin.png')} />: {this.props.G.playerCoins[this.props.playerID]}, Swords: {this.props.G.playerSwords[this.props.playerID]}, Active: {(this.props.G.activePlayer === this.props.playerID) ? 'yes' : 'no'}, currently playing: {(this.props.ctx.currentPlayer === this.props.playerID) ? 'yes' : 'no'}</h1>
+          <h1>Player {this.props.playerID},
+            <img style={{ height: '1em' }} src={require('./images/points.png')} />: {this.props.G.playerVictoryPoints[this.props.playerID]}, 
+            <img style={{ height: '1em' }} src={require('./images/coin.png')} />: {this.props.G.playerCoins[this.props.playerID]},
+            Swords: {this.props.G.playerSwords[this.props.playerID]},
+            Admirals: {this.props.G.playerNumAdmirals[this.props.playerID]},
+            Jesters: {this.props.G.playerNumJesters[this.props.playerID]},
+            Mademoiselles: {this.props.G.playerNumMademoiselles[this.props.playerID]},
+            Govenors: {this.props.G.playerNumGovenors[this.props.playerID]},
+            Traders: {this.props.G.playerNumGreenTraders[this.props.playerID] + this.props.G.playerNumBlueTraders[this.props.playerID] + this.props.G.playerNumRedTraders[this.props.playerID] + this.props.G.playerNumBlackTraders[this.props.playerID] + this.props.G.playerNumYellowTraders[this.props.playerID]},
+            Vice Admirals: {this.props.G.playerNumViceAdmirals[this.props.playerID]},
+            Gunners: {this.props.G.playerNumGunners[this.props.playerID]},
+            Clerks: {this.props.G.playerNumGreenClerks[this.props.playerID] + this.props.G.playerNumBlueClerks[this.props.playerID] + this.props.G.playerNumRedClerks[this.props.playerID] + this.props.G.playerNumBlackClerks[this.props.playerID] + this.props.G.playerNumYellowClerks[this.props.playerID]},
+            active: {(this.props.G.activePlayer === this.props.playerID) ? 'yes' : 'no'},
+            currently playing: {(this.props.ctx.currentPlayer === this.props.playerID) ? 'yes' : 'no'}
+          </h1>
           <ul style={{ overflow: 'auto', whiteSpace: 'nowrap' }}>
             {playerDisplay}
           </ul>

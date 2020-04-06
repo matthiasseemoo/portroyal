@@ -5,7 +5,7 @@
 
 .card {
 	display: inline;
-	vertical-align: middle;
+	vertical-align: top;
 }
 
 .cardImage, .cardImageSmall {

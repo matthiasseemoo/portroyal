@@ -1,5 +1,10 @@
-
 import { PlayerView } from 'boardgame.io/core';
+
+// TODO: expedition
+// TODO: ships with extra coins
+// TODO: game board
+// TODO: skip turns automatically if nothing can be done
+// TODO: handle invalid moves: https://boardgame.io/documentation/#/immutability?id=invalid-moves
 
 function ShuffleDrawPile(G, ctx) {
   G.secret.drawPile = ctx.random.Shuffle(G.secret.drawPile);
@@ -31,14 +36,19 @@ function TradeShip(G, ctx, cardIndex) {
 
     if (tradedShip.color === 'green') {
       G.playerCoins[ctx.currentPlayer] += G.playerNumGreenTraders[ctx.currentPlayer];
+      G.drawCount += G.playerNumGreenTraders[ctx.currentPlayer];
     } else if (tradedShip.color === 'blue') {
       G.playerCoins[ctx.currentPlayer] += G.playerNumBlueTraders[ctx.currentPlayer];
+      G.drawCount += G.playerNumBlueTraders[ctx.currentPlayer];
     } else if (tradedShip.color === 'red') {
       G.playerCoins[ctx.currentPlayer] += G.playerNumRedTraders[ctx.currentPlayer];
+      G.drawCount += G.playerNumRedTraders[ctx.currentPlayer];
     } else if (tradedShip.color === 'black') {
       G.playerCoins[ctx.currentPlayer] += G.playerNumBlackTraders[ctx.currentPlayer];
+      G.drawCount += G.playerNumBlackTraders[ctx.currentPlayer];
     } else if (tradedShip.color === 'yellow') {
       G.playerCoins[ctx.currentPlayer] += G.playerNumYellowTraders[ctx.currentPlayer];
+      G.drawCount += G.playerNumYellowTraders[ctx.currentPlayer];
     }
     
     // Add Ship to discard pile
@@ -105,6 +115,12 @@ function HirePerson(G, ctx, cardIndex) {
       } else if (hiredPerson.subtype === 'Admiral') {
         G.playerNumAdmirals = G.playerNumAdmirals.slice();
         G.playerNumAdmirals[ctx.currentPlayer]++;
+      } else if (hiredPerson.subtype === 'Vice Admiral') {
+        G.playerNumViceAdmirals = G.playerNumViceAdmirals.slice();
+        G.playerNumViceAdmirals[ctx.currentPlayer]++;
+      } else if (hiredPerson.subtype === 'Gunner') {
+        G.playerNumGunners = G.playerNumGunners.slice();
+        G.playerNumGunners[ctx.currentPlayer]++;
       } else if (hiredPerson.subtype === 'Trader') {
         if (hiredPerson.color === 'green') {
           G.playerNumGreenTraders = G.playerNumGreenTraders.slice();
@@ -121,6 +137,23 @@ function HirePerson(G, ctx, cardIndex) {
         } else if (hiredPerson.color === 'yellow') {
           G.playerNumYellowTraders = G.playerNumYellowTraders.slice();
           G.playerNumYellowTraders[ctx.currentPlayer]++;
+        }
+      } else if (hiredPerson.subtype === 'Clerk') {
+        if (hiredPerson.color === 'green') {
+          G.playerNumGreenClerks = G.playerNumGreenClerks.slice();
+          G.playerNumGreenClerks[ctx.currentPlayer]++;
+        } else if (hiredPerson.color === 'blue') {
+          G.playerNumBlueClerks = G.playerNumBlueClerks.slice();
+          G.playerNumBlueClerks[ctx.currentPlayer]++;
+        } else if (hiredPerson.color === 'red') {
+          G.playerNumRedClerks = G.playerNumRedClerks.slice();
+          G.playerNumRedClerks[ctx.currentPlayer]++;
+        } else if (hiredPerson.color === 'black') {
+          G.playerNumBlackClerks = G.playerNumBlackClerks.slice();
+          G.playerNumBlackClerks[ctx.currentPlayer]++;
+        } else if (hiredPerson.color === 'yellow') {
+          G.playerNumYellowClerks = G.playerNumYellowClerks.slice();
+          G.playerNumYellowClerks[ctx.currentPlayer]++;
         }
       }
 
@@ -280,9 +313,21 @@ function BeginTurn(G, ctx) {
 
     let numCardsInHarborDisplays = G.harborDisplayShips.length + G.harborDisplayNonShips.length;
     // Get two coins for each Admiral if 5 or more cards in harbor display
-    if (G.playerNumAdmirals > 0 && numCardsInHarborDisplays >= 5) {
+    if (G.playerNumAdmirals[ctx.currentPlayer] > 0 && numCardsInHarborDisplays >= 5) {
       G.playerCoins = G.playerCoins.slice();
       G.playerCoins[ctx.currentPlayer] += G.playerNumAdmirals[ctx.currentPlayer] * 2;
+    }
+
+    // Get one coin for each Vice Admiral if 3 or 4 cards in harbor display
+    if (G.playerNumViceAdmirals[ctx.currentPlayer] > 0 && (numCardsInHarborDisplays === 3 || numCardsInHarborDisplays === 4)) {
+      G.playerCoins = G.playerCoins.slice();
+      G.playerCoins[ctx.currentPlayer] += G.playerNumViceAdmirals[ctx.currentPlayer];
+    }
+
+    // Get coins for ships in harbor display for each Gunner
+    if (G.playerNumGunners[ctx.currentPlayer] > 0 && G.harborDisplayShips.length > 1) {
+      G.playerCoins = G.playerCoins.slice();
+      G.playerCoins[ctx.currentPlayer] += G.playerNumGunners[ctx.currentPlayer] * (G.harborDisplayShips.length - 1);
     }
 
     // Only trade&hire
@@ -297,9 +342,21 @@ function EndStage(G, ctx) {
     // tradeAndHire onBegin equivalent (only for the currentPlayer)
     let numCardsInHarborDisplays = G.harborDisplayShips.length + G.harborDisplayNonShips.length;
     // Get two coins for each Admiral if 5 or more cards in harbor display
-    if (G.playerNumAdmirals > 0 && numCardsInHarborDisplays >= 5) {
+    if (G.playerNumAdmirals[ctx.currentPlayer] > 0 && numCardsInHarborDisplays >= 5) {
       G.playerCoins = G.playerCoins.slice();
       G.playerCoins[ctx.currentPlayer] += G.playerNumAdmirals[ctx.currentPlayer] * 2;
+    }
+
+    // Get one coin for each Vice Admiral if 3 or 4 cards in harbor display
+    if (G.playerNumViceAdmirals[ctx.currentPlayer] > 0 && (numCardsInHarborDisplays === 3 || numCardsInHarborDisplays === 4)) {
+      G.playerCoins = G.playerCoins.slice();
+      G.playerCoins[ctx.currentPlayer] += G.playerNumViceAdmirals[ctx.currentPlayer];
+    }
+
+    // Get coins for ships in harbor display for each Gunner
+    if (G.playerNumGunners[ctx.currentPlayer] > 0 && G.harborDisplayShips.length > 1) {
+      G.playerCoins = G.playerCoins.slice();
+      G.playerCoins[ctx.currentPlayer] += G.playerNumGunners[ctx.currentPlayer] * (G.harborDisplayShips.length - 1);
     }
 
     if (G.harborDisplayShips.length >= 4) {
@@ -319,68 +376,174 @@ const PortRoyal = {
   setup: (ctx, setupData) => ({
     secret: {
       drawPile: ctx.random.Shuffle([
-        { type: 'Expedition', subtype: 'anchorCrossHouse', victoryPoints: 5, imageFilename: 'card_zoom-0.png' },
-        { type: 'Expedition', subtype: 'doubleAnchor', victoryPoints: 4, imageFilename: 'card_zoom-1.png' },
-        { type: 'Expedition', subtype: 'doubleCross', victoryPoints: 4, imageFilename: 'card_zoom-2.png' },
-        { type: 'Expedition', subtype: 'doubleHouse', victoryPoints: 4, imageFilename: 'card_zoom-3.png' },
-        { type: 'Expedition', subtype: 'doubleAnchorHouse', victoryPoints: 6, imageFilename: 'card_zoom-4.png' },
-        { type: 'Expedition', subtype: 'doubleCrossHouse', victoryPoints: 6, imageFilename: 'card_zoom-5.png' },
-        { type: 'Person', subtype: 'Admiral', victoryPoints: 1, hireingCosts : 5, imageFilename: 'card_zoom-6.png' },
-        { type: 'Person', subtype: 'Admiral', victoryPoints: 2, hireingCosts : 7, imageFilename: 'card_zoom-9.png' },
-        { type: 'Person', subtype: 'Admiral', victoryPoints: 3, hireingCosts : 9, imageFilename: 'card_zoom-10.png' },
-        { type: 'Person', subtype: 'Mademoiselle', victoryPoints: 2, hireingCosts : 7, imageFilename: 'card_zoom-13.png' },
-        { type: 'Person', subtype: 'Mademoiselle', victoryPoints: 3, hireingCosts : 9, imageFilename: 'card_zoom-15.png' },
-        { type: 'Person', subtype: 'Jester', victoryPoints: 1, hireingCosts : 5, imageFilename: 'card_zoom-16.png' },
-        { type: 'Person', subtype: 'Jester', victoryPoints: 2, hireingCosts : 7, imageFilename: 'card_zoom-17.png' },
-        { type: 'Person', subtype: 'Jester', victoryPoints: 3, hireingCosts : 9, imageFilename: 'card_zoom-20.png' },
-        { type: 'Person', subtype: 'Govenor', victoryPoints: 0, hireingCosts : 8, imageFilename: 'card_zoom-21.png' },
-        { type: 'Person', subtype: 'Trader', victoryPoints: 1, hireingCosts : 3, color: 'green', imageFilename: 'card_zoom-25.png' },
-        { type: 'Person', subtype: 'Trader', victoryPoints: 1, hireingCosts : 3, color: 'blue', imageFilename: 'card_zoom-27.png' },
-        { type: 'Person', subtype: 'Trader', victoryPoints: 2, hireingCosts : 5, color: 'blue', imageFilename: 'card_zoom-28.png' },
-        { type: 'Person', subtype: 'Trader', victoryPoints: 1, hireingCosts : 3, color: 'red', imageFilename: 'card_zoom-29.png' },
-        { type: 'Person', subtype: 'Trader', victoryPoints: 1, hireingCosts : 3, color: 'black', imageFilename: 'card_zoom-31.png' },
-        { type: 'Person', subtype: 'Trader', victoryPoints: 1, hireingCosts : 3, color: 'yellow', imageFilename: 'card_zoom-33.png' },
-        { type: 'Person', subtype: 'Trader', victoryPoints: 2, hireingCosts : 5, color: 'yellow', imageFilename: 'card_zoom-34.png' },
-        { type: 'Person', subtype: 'JackOfAllTrades', victoryPoints: 1, hireingCosts : 6, imageFilename: 'card_zoom-35.png' },
-        { type: 'Person', subtype: 'Captain', victoryPoints: 1, hireingCosts : 4, imageFilename: 'card_zoom-38.png' },
-        { type: 'Person', subtype: 'Sailor', swords: 1, victoryPoints: 1, hireingCosts : 3, imageFilename: 'card_zoom-49.png' },
-        { type: 'Person', subtype: 'Sailor', swords: 1, victoryPoints: 2, hireingCosts : 5, imageFilename: 'card_zoom-51.png' },
-        { type: 'Person', subtype: 'Sailor', swords: 1, victoryPoints: 3, hireingCosts : 7, imageFilename: 'card_zoom-52.png' },
-        { type: 'Person', subtype: 'Pirate', swords: 2, victoryPoints: 1, hireingCosts : 5, imageFilename: 'card_zoom-53.png' },
-        { type: 'Person', subtype: 'Pirate', swords: 2, victoryPoints: 2, hireingCosts : 7, imageFilename: 'card_zoom-54.png' },
-        { type: 'Person', subtype: 'Pirate', swords: 2, victoryPoints: 3, hireingCosts : 9, imageFilename: 'card_zoom-55.png' },
-        { type: 'Person', subtype: 'Priest', victoryPoints: 1, hireingCosts : 4, imageFilename: 'card_zoom-56.png' },
-        { type: 'Person', subtype: 'Settler', victoryPoints: 1, hireingCosts : 4, imageFilename: 'card_zoom-61.png' },
-        { type: 'Ship', subtype: 'Skiff', swords: 1, coins : 1, color: 'green', imageFilename: 'card_zoom-66.png' },
-        { type: 'Ship', subtype: 'Skiff', swords: 1, coins : 2, color: 'green', imageFilename: 'card_zoom-69.png' },
-        { type: 'Ship', subtype: 'Skiff', swords: 3, coins : 2, color: 'green', imageFilename: 'card_zoom-70.png' },
-        { type: 'Ship', subtype: 'Skiff', swords: 3, coins : 3, color: 'green', imageFilename: 'card_zoom-72.png' },
-        { type: 'Ship', subtype: 'Skiff', swords: 5, coins : 3, color: 'green', imageFilename: 'card_zoom-73.png' },
-        { type: 'Ship', subtype: 'Skiff', swords: 5, coins : 4, color: 'green', imageFilename: 'card_zoom-75.png' },
-        { type: 'Ship', subtype: 'Flute', swords: 1, coins : 1, color: 'blue', imageFilename: 'card_zoom-76.png' },
-        { type: 'Ship', subtype: 'Flute', swords: 1, coins : 2, color: 'blue', imageFilename: 'card_zoom-79.png' },
-        { type: 'Ship', subtype: 'Flute', swords: 2, coins : 2, color: 'blue', imageFilename: 'card_zoom-80.png' },
-        { type: 'Ship', subtype: 'Flute', swords: 2, coins : 3, color: 'blue', imageFilename: 'card_zoom-82.png' },
-        { type: 'Ship', subtype: 'Flute', swords: 5, coins : 3, color: 'blue', imageFilename: 'card_zoom-83.png' },
-        { type: 'Ship', subtype: 'Flute', swords: 5, coins : 4, color: 'blue', imageFilename: 'card_zoom-85.png' },
-        { type: 'Ship', subtype: 'Frigate', swords: 1, coins : 1, color: 'red', imageFilename: 'card_zoom-86.png' },
-        { type: 'Ship', subtype: 'Frigate', swords: 3, coins : 2, color: 'red', imageFilename: 'card_zoom-89.png' },
-        { type: 'Ship', subtype: 'Frigate', swords: 6, coins : 3, color: 'red', imageFilename: 'card_zoom-92.png' },
-        { type: 'Ship', subtype: 'Frigate', swords: 99, coins : 3, color: 'red', imageFilename: 'card_zoom-94.png' },
-        { type: 'Ship', subtype: 'Frigate', swords: 99, coins : 4, color: 'red', imageFilename: 'card_zoom-95.png' },
-        { type: 'Ship', subtype: 'Galleon', swords: 2, coins : 1, color: 'black', imageFilename: 'card_zoom-96.png' },
-        { type: 'Ship', subtype: 'Galleon', swords: 4, coins : 2, color: 'black', imageFilename: 'card_zoom-99.png' },
-        { type: 'Ship', subtype: 'Galleon', swords: 7, coins : 3, color: 'black', imageFilename: 'card_zoom-102.png' },
-        { type: 'Ship', subtype: 'Galleon', swords: 99, coins : 3, color: 'black', imageFilename: 'card_zoom-104.png' },
-        { type: 'Ship', subtype: 'Galleon', swords: 99, coins : 4, color: 'black', imageFilename: 'card_zoom-105.png' },
-        { type: 'Ship', subtype: 'Pinace', swords: 1, coins : 1, color: 'yellow', imageFilename: 'card_zoom-106.png' },
-        { type: 'Ship', subtype: 'Pinace', swords: 1, coins : 2, color: 'yellow', imageFilename: 'card_zoom-109.png' },
-        { type: 'Ship', subtype: 'Pinace', swords: 2, coins : 2, color: 'yellow', imageFilename: 'card_zoom-110.png' },
-        { type: 'Ship', subtype: 'Pinace', swords: 2, coins : 3, color: 'yellow', imageFilename: 'card_zoom-112.png' },
-        { type: 'Ship', subtype: 'Pinace', swords: 4, coins : 3, color: 'yellow', imageFilename: 'card_zoom-113.png' },
-        { type: 'Ship', subtype: 'Pinace', swords: 4, coins : 4, color: 'yellow', imageFilename: 'card_zoom-115.png' },
-        { type: 'TaxIncrease', subtype: 'minVictoryPoints', imageFilename: 'card_zoom-116.png' },
-        { type: 'TaxIncrease', subtype: 'maxSwords', imageFilename: 'card_zoom-118.png' },
+        { type: 'Expedition', subtype: 'anchorCrossHouse', victoryPoints: 5, imageFilename: 'card_zoom-0.png', game: 'base' },
+        { type: 'Expedition', subtype: 'doubleAnchor', victoryPoints: 4, imageFilename: 'card_zoom-1.png', game: 'base' },
+        { type: 'Expedition', subtype: 'doubleCross', victoryPoints: 4, imageFilename: 'card_zoom-2.png', game: 'base' },
+        { type: 'Expedition', subtype: 'doubleHouse', victoryPoints: 4, imageFilename: 'card_zoom-3.png', game: 'base' },
+        { type: 'Expedition', subtype: 'doubleAnchorHouse', victoryPoints: 6, imageFilename: 'card_zoom-4.png', game: 'base' },
+        { type: 'Expedition', subtype: 'doubleCrossHouse', victoryPoints: 6, imageFilename: 'card_zoom-5.png', game: 'base' },
+        { type: 'Person', subtype: 'Admiral', victoryPoints: 1, hireingCosts : 5, imageFilename: 'card_zoom-6.png', game: 'base' },
+        { type: 'Person', subtype: 'Admiral', victoryPoints: 2, hireingCosts : 7, imageFilename: 'card_zoom-9.png', game: 'base' },
+        { type: 'Person', subtype: 'Admiral', victoryPoints: 2, hireingCosts : 7, imageFilename: 'card_zoom-9.png', game: 'base' },
+        { type: 'Person', subtype: 'Admiral', victoryPoints: 2, hireingCosts : 7, imageFilename: 'card_zoom-9.png', game: 'base' },
+        { type: 'Person', subtype: 'Admiral', victoryPoints: 3, hireingCosts : 9, imageFilename: 'card_zoom-10.png', game: 'base' },
+        { type: 'Person', subtype: 'Admiral', victoryPoints: 3, hireingCosts : 9, imageFilename: 'card_zoom-10.png', game: 'base' },
+        { type: 'Person', subtype: 'Mademoiselle', victoryPoints: 2, hireingCosts : 7, imageFilename: 'card_zoom-13.png', game: 'base' },
+        { type: 'Person', subtype: 'Mademoiselle', victoryPoints: 2, hireingCosts : 7, imageFilename: 'card_zoom-13.png', game: 'base' },
+        { type: 'Person', subtype: 'Mademoiselle', victoryPoints: 3, hireingCosts : 9, imageFilename: 'card_zoom-15.png', game: 'base' },
+        { type: 'Person', subtype: 'Mademoiselle', victoryPoints: 3, hireingCosts : 9, imageFilename: 'card_zoom-15.png', game: 'base' },
+        { type: 'Person', subtype: 'Jester', victoryPoints: 1, hireingCosts : 5, imageFilename: 'card_zoom-16.png', game: 'base' },
+        { type: 'Person', subtype: 'Jester', victoryPoints: 2, hireingCosts : 7, imageFilename: 'card_zoom-17.png', game: 'base' },
+        { type: 'Person', subtype: 'Jester', victoryPoints: 2, hireingCosts : 7, imageFilename: 'card_zoom-17.png', game: 'base' },
+        { type: 'Person', subtype: 'Jester', victoryPoints: 2, hireingCosts : 7, imageFilename: 'card_zoom-17.png', game: 'base' },
+        { type: 'Person', subtype: 'Jester', victoryPoints: 3, hireingCosts : 9, imageFilename: 'card_zoom-20.png', game: 'base' },
+        { type: 'Person', subtype: 'Govenor', victoryPoints: 0, hireingCosts : 8, imageFilename: 'card_zoom-21.png', game: 'base' },
+        { type: 'Person', subtype: 'Govenor', victoryPoints: 0, hireingCosts : 8, imageFilename: 'card_zoom-21.png', game: 'base' },
+        { type: 'Person', subtype: 'Govenor', victoryPoints: 0, hireingCosts : 8, imageFilename: 'card_zoom-21.png', game: 'base' },
+        { type: 'Person', subtype: 'Govenor', victoryPoints: 0, hireingCosts : 8, imageFilename: 'card_zoom-21.png', game: 'base' },
+        { type: 'Person', subtype: 'Trader', victoryPoints: 1, hireingCosts : 3, color: 'green', imageFilename: 'card_zoom-25.png', game: 'base' },
+        { type: 'Person', subtype: 'Trader', victoryPoints: 1, hireingCosts : 3, color: 'green', imageFilename: 'card_zoom-25.png', game: 'base' },
+        { type: 'Person', subtype: 'Trader', victoryPoints: 1, hireingCosts : 3, color: 'blue', imageFilename: 'card_zoom-27.png', game: 'base' },
+        { type: 'Person', subtype: 'Trader', victoryPoints: 2, hireingCosts : 5, color: 'blue', imageFilename: 'card_zoom-28.png', game: 'base' },
+        { type: 'Person', subtype: 'Trader', victoryPoints: 1, hireingCosts : 3, color: 'red', imageFilename: 'card_zoom-29.png', game: 'base' },
+        { type: 'Person', subtype: 'Trader', victoryPoints: 1, hireingCosts : 3, color: 'red', imageFilename: 'card_zoom-29.png', game: 'base' },
+        { type: 'Person', subtype: 'Trader', victoryPoints: 1, hireingCosts : 3, color: 'black', imageFilename: 'card_zoom-31.png', game: 'base' },
+        { type: 'Person', subtype: 'Trader', victoryPoints: 1, hireingCosts : 3, color: 'black', imageFilename: 'card_zoom-31.png', game: 'base' },
+        { type: 'Person', subtype: 'Trader', victoryPoints: 1, hireingCosts : 3, color: 'yellow', imageFilename: 'card_zoom-33.png', game: 'base' },
+        { type: 'Person', subtype: 'Trader', victoryPoints: 2, hireingCosts : 5, color: 'yellow', imageFilename: 'card_zoom-34.png', game: 'base' },
+        { type: 'Person', subtype: 'JackOfAllTrades', victoryPoints: 1, hireingCosts : 6, imageFilename: 'card_zoom-35.png', game: 'base' },
+        { type: 'Person', subtype: 'JackOfAllTrades', victoryPoints: 1, hireingCosts : 6, imageFilename: 'card_zoom-35.png', game: 'base' },
+        { type: 'Person', subtype: 'JackOfAllTrades', victoryPoints: 1, hireingCosts : 6, imageFilename: 'card_zoom-35.png', game: 'base' },
+        { type: 'Person', subtype: 'Captain', victoryPoints: 1, hireingCosts : 4, imageFilename: 'card_zoom-38.png', game: 'base' },
+        { type: 'Person', subtype: 'Captain', victoryPoints: 1, hireingCosts : 4, imageFilename: 'card_zoom-38.png', game: 'base' },
+        { type: 'Person', subtype: 'Captain', victoryPoints: 1, hireingCosts : 4, imageFilename: 'card_zoom-38.png', game: 'base' },
+        { type: 'Person', subtype: 'Captain', victoryPoints: 1, hireingCosts : 4, imageFilename: 'card_zoom-38.png', game: 'base' },
+        { type: 'Person', subtype: 'Captain', victoryPoints: 1, hireingCosts : 4, imageFilename: 'card_zoom-38.png', game: 'base' },
+        { type: 'Person', subtype: 'Sailor', swords: 1, victoryPoints: 1, hireingCosts : 3, imageFilename: 'card_zoom-49.png', game: 'base' },
+        { type: 'Person', subtype: 'Sailor', swords: 1, victoryPoints: 1, hireingCosts : 3, imageFilename: 'card_zoom-49.png', game: 'base' },
+        { type: 'Person', subtype: 'Sailor', swords: 1, victoryPoints: 1, hireingCosts : 3, imageFilename: 'card_zoom-49.png', game: 'base' },
+        { type: 'Person', subtype: 'Sailor', swords: 1, victoryPoints: 1, hireingCosts : 3, imageFilename: 'card_zoom-49.png', game: 'base' },
+        { type: 'Person', subtype: 'Sailor', swords: 1, victoryPoints: 1, hireingCosts : 3, imageFilename: 'card_zoom-49.png', game: 'base' },
+        { type: 'Person', subtype: 'Sailor', swords: 1, victoryPoints: 1, hireingCosts : 3, imageFilename: 'card_zoom-49.png', game: 'base' },
+        { type: 'Person', subtype: 'Sailor', swords: 1, victoryPoints: 1, hireingCosts : 3, imageFilename: 'card_zoom-49.png', game: 'base' },
+        { type: 'Person', subtype: 'Sailor', swords: 1, victoryPoints: 2, hireingCosts : 5, imageFilename: 'card_zoom-51.png', game: 'base' },
+        { type: 'Person', subtype: 'Sailor', swords: 1, victoryPoints: 2, hireingCosts : 5, imageFilename: 'card_zoom-51.png', game: 'base' },
+        { type: 'Person', subtype: 'Sailor', swords: 1, victoryPoints: 3, hireingCosts : 7, imageFilename: 'card_zoom-52.png', game: 'base' },
+        { type: 'Person', subtype: 'Pirate', swords: 2, victoryPoints: 1, hireingCosts : 5, imageFilename: 'card_zoom-53.png', game: 'base' },
+        { type: 'Person', subtype: 'Pirate', swords: 2, victoryPoints: 2, hireingCosts : 7, imageFilename: 'card_zoom-54.png', game: 'base' },
+        { type: 'Person', subtype: 'Pirate', swords: 2, victoryPoints: 3, hireingCosts : 9, imageFilename: 'card_zoom-55.png', game: 'base' },
+        { type: 'Person', subtype: 'Priest', victoryPoints: 1, hireingCosts : 4, imageFilename: 'card_zoom-56.png', game: 'base' },
+        { type: 'Person', subtype: 'Priest', victoryPoints: 1, hireingCosts : 4, imageFilename: 'card_zoom-56.png', game: 'base' },
+        { type: 'Person', subtype: 'Priest', victoryPoints: 1, hireingCosts : 4, imageFilename: 'card_zoom-56.png', game: 'base' },
+        { type: 'Person', subtype: 'Priest', victoryPoints: 1, hireingCosts : 4, imageFilename: 'card_zoom-56.png', game: 'base' },
+        { type: 'Person', subtype: 'Priest', victoryPoints: 1, hireingCosts : 4, imageFilename: 'card_zoom-56.png', game: 'base' },
+        { type: 'Person', subtype: 'Settler', victoryPoints: 1, hireingCosts : 4, imageFilename: 'card_zoom-61.png', game: 'base' },
+        { type: 'Person', subtype: 'Settler', victoryPoints: 1, hireingCosts : 4, imageFilename: 'card_zoom-61.png', game: 'base' },
+        { type: 'Person', subtype: 'Settler', victoryPoints: 1, hireingCosts : 4, imageFilename: 'card_zoom-61.png', game: 'base' },
+        { type: 'Person', subtype: 'Settler', victoryPoints: 1, hireingCosts : 4, imageFilename: 'card_zoom-61.png', game: 'base' },
+        { type: 'Person', subtype: 'Settler', victoryPoints: 1, hireingCosts : 4, imageFilename: 'card_zoom-61.png', game: 'base' },
+        { type: 'Ship', subtype: 'Skiff', swords: 1, coins : 1, color: 'green', imageFilename: 'card_zoom-66.png', game: 'base' },
+        { type: 'Ship', subtype: 'Skiff', swords: 1, coins : 1, color: 'green', imageFilename: 'card_zoom-66.png', game: 'base' },
+        { type: 'Ship', subtype: 'Skiff', swords: 1, coins : 1, color: 'green', imageFilename: 'card_zoom-66.png', game: 'base' },
+        { type: 'Ship', subtype: 'Skiff', swords: 1, coins : 1, color: 'green', imageFilename: 'card_zoom-66.png', game: 'justOneMoreContract' },
+        { type: 'Ship', subtype: 'Skiff', swords: 1, coins : 2, color: 'green', imageFilename: 'card_zoom-69.png', game: 'base' },
+        { type: 'Ship', subtype: 'Skiff', swords: 1, coins : 2, color: 'green', imageFilename: 'card_zoom-69.png', game: 'unterwegs' },
+        { type: 'Ship', subtype: 'Skiff', swords: 3, coins : 2, color: 'green', imageFilename: 'card_zoom-70.png', game: 'base' },
+        { type: 'Ship', subtype: 'Skiff', swords: 3, coins : 2, color: 'green', imageFilename: 'card_zoom-70.png', game: 'base' },
+        { type: 'Ship', subtype: 'Skiff', swords: 3, coins : 2, color: 'green', imageFilename: 'card_zoom-70.png', game: 'unterwegs' },
+        { type: 'Ship', subtype: 'Skiff', swords: 3, coins : 3, color: 'green', imageFilename: 'card_zoom-72.png', game: 'base' },
+        { type: 'Ship', subtype: 'Skiff', swords: 5, coins : 3, color: 'green', imageFilename: 'card_zoom-73.png', game: 'base' },
+        { type: 'Ship', subtype: 'Skiff', swords: 5, coins : 3, color: 'green', imageFilename: 'card_zoom-73.png', game: 'base' },
+        { type: 'Ship', subtype: 'Skiff', swords: 5, coins : 4, color: 'green', imageFilename: 'card_zoom-75.png', game: 'base' },
+        { type: 'Ship', subtype: 'Flute', swords: 1, coins : 1, color: 'blue', imageFilename: 'card_zoom-76.png', game: 'base' },
+        { type: 'Ship', subtype: 'Flute', swords: 1, coins : 1, color: 'blue', imageFilename: 'card_zoom-76.png', game: 'base' },
+        { type: 'Ship', subtype: 'Flute', swords: 1, coins : 1, color: 'blue', imageFilename: 'card_zoom-76.png', game: 'base' },
+        { type: 'Ship', subtype: 'Flute', swords: 1, coins : 1, color: 'blue', imageFilename: 'card_zoom-76.png', game: 'justOneMoreContract' },
+        { type: 'Ship', subtype: 'Flute', swords: 1, coins : 2, color: 'blue', imageFilename: 'card_zoom-79.png', game: 'base' },
+        { type: 'Ship', subtype: 'Flute', swords: 2, coins : 2, color: 'blue', imageFilename: 'card_zoom-80.png', game: 'base' },
+        { type: 'Ship', subtype: 'Flute', swords: 2, coins : 2, color: 'blue', imageFilename: 'card_zoom-80.png', game: 'base' },
+        { type: 'Ship', subtype: 'Flute', swords: 2, coins : 2, color: 'blue', imageFilename: 'card_zoom-80.png', game: 'unterwegs' },
+        { type: 'Ship', subtype: 'Flute', swords: 2, coins : 3, color: 'blue', imageFilename: 'card_zoom-82.png', game: 'base' },
+        { type: 'Ship', subtype: 'Flute', swords: 5, coins : 3, color: 'blue', imageFilename: 'card_zoom-83.png', game: 'base' },
+        { type: 'Ship', subtype: 'Flute', swords: 5, coins : 3, color: 'blue', imageFilename: 'card_zoom-83.png', game: 'base' },
+        { type: 'Ship', subtype: 'Flute', swords: 5, coins : 3, color: 'blue', imageFilename: 'card_zoom-83.png', game: 'unterwegs' },
+        { type: 'Ship', subtype: 'Flute', swords: 5, coins : 4, color: 'blue', imageFilename: 'card_zoom-85.png', game: 'base' },
+        { type: 'Ship', subtype: 'Frigate', swords: 1, coins : 1, color: 'red', imageFilename: 'card_zoom-86.png', game: 'base' },
+        { type: 'Ship', subtype: 'Frigate', swords: 1, coins : 1, color: 'red', imageFilename: 'card_zoom-86.png', game: 'base' },
+        { type: 'Ship', subtype: 'Frigate', swords: 1, coins : 1, color: 'red', imageFilename: 'card_zoom-86.png', game: 'base' },
+        { type: 'Ship', subtype: 'Frigate', swords: 1, coins : 1, color: 'red', imageFilename: 'card_zoom-86.png', game: 'justOneMoreContract' },
+        { type: 'Ship', subtype: 'Frigate', swords: 3, coins : 2, color: 'red', imageFilename: 'card_zoom-89.png', game: 'base' },
+        { type: 'Ship', subtype: 'Frigate', swords: 3, coins : 2, color: 'red', imageFilename: 'card_zoom-89.png', game: 'base' },
+        { type: 'Ship', subtype: 'Frigate', swords: 3, coins : 2, color: 'red', imageFilename: 'card_zoom-89.png', game: 'base' },
+        { type: 'Ship', subtype: 'Frigate', swords: 3, coins : 2, color: 'red', imageFilename: 'card_zoom-89.png', game: 'unterwegs' },
+        { type: 'Ship', subtype: 'Frigate', swords: 6, coins : 3, color: 'red', imageFilename: 'card_zoom-92.png', game: 'base' },
+        { type: 'Ship', subtype: 'Frigate', swords: 6, coins : 3, color: 'red', imageFilename: 'card_zoom-92.png', game: 'base' },
+        { type: 'Ship', subtype: 'Frigate', swords: 6, coins : 3, color: 'red', imageFilename: 'card_zoom-92.png', game: 'unterwegs' },
+        { type: 'Ship', subtype: 'Frigate', swords: 99, coins : 3, color: 'red', imageFilename: 'card_zoom-94.png', game: 'base' },
+        { type: 'Ship', subtype: 'Frigate', swords: 99, coins : 4, color: 'red', imageFilename: 'card_zoom-95.png', game: 'base' },
+        { type: 'Ship', subtype: 'Galleon', swords: 2, coins : 1, color: 'black', imageFilename: 'card_zoom-96.png', game: 'base' },
+        { type: 'Ship', subtype: 'Galleon', swords: 2, coins : 1, color: 'black', imageFilename: 'card_zoom-96.png', game: 'base' },
+        { type: 'Ship', subtype: 'Galleon', swords: 2, coins : 1, color: 'black', imageFilename: 'card_zoom-96.png', game: 'base' },
+        { type: 'Ship', subtype: 'Galleon', swords: 2, coins : 1, color: 'black', imageFilename: 'card_zoom-96.png', game: 'justOneMoreContract' },
+        { type: 'Ship', subtype: 'Galleon', swords: 2, coins : 1, color: 'black', imageFilename: 'card_zoom-96.png', game: 'unterwegs' },
+        { type: 'Ship', subtype: 'Galleon', swords: 4, coins : 2, color: 'black', imageFilename: 'card_zoom-99.png', game: 'base' },
+        { type: 'Ship', subtype: 'Galleon', swords: 4, coins : 2, color: 'black', imageFilename: 'card_zoom-99.png', game: 'base' },
+        { type: 'Ship', subtype: 'Galleon', swords: 4, coins : 2, color: 'black', imageFilename: 'card_zoom-99.png', game: 'base' },
+        { type: 'Ship', subtype: 'Galleon', swords: 7, coins : 3, color: 'black', imageFilename: 'card_zoom-102.png', game: 'base' },
+        { type: 'Ship', subtype: 'Galleon', swords: 7, coins : 3, color: 'black', imageFilename: 'card_zoom-102.png', game: 'base' },
+        { type: 'Ship', subtype: 'Galleon', swords: 99, coins : 3, color: 'black', imageFilename: 'card_zoom-104.png', game: 'base' },
+        { type: 'Ship', subtype: 'Galleon', swords: 99, coins : 4, color: 'black', imageFilename: 'card_zoom-105.png', game: 'base' },
+        { type: 'Ship', subtype: 'Galleon', swords: 99, coins : 4, color: 'black', imageFilename: 'card_zoom-105.png', game: 'unterwegs' },
+        { type: 'Ship', subtype: 'Pinace', swords: 1, coins : 1, color: 'yellow', imageFilename: 'card_zoom-106.png', game: 'base' },
+        { type: 'Ship', subtype: 'Pinace', swords: 1, coins : 1, color: 'yellow', imageFilename: 'card_zoom-106.png', game: 'base' },
+        { type: 'Ship', subtype: 'Pinace', swords: 1, coins : 1, color: 'yellow', imageFilename: 'card_zoom-106.png', game: 'base' },
+        { type: 'Ship', subtype: 'Pinace', swords: 1, coins : 1, color: 'yellow', imageFilename: 'card_zoom-106.png', game: 'unterwegs' },
+        { type: 'Ship', subtype: 'Pinace', swords: 1, coins : 2, color: 'yellow', imageFilename: 'card_zoom-109.png', game: 'base' },
+        { type: 'Ship', subtype: 'Pinace', swords: 2, coins : 2, color: 'yellow', imageFilename: 'card_zoom-110.png', game: 'base' },
+        { type: 'Ship', subtype: 'Pinace', swords: 2, coins : 2, color: 'yellow', imageFilename: 'card_zoom-110.png', game: 'base' },
+        { type: 'Ship', subtype: 'Pinace', swords: 2, coins : 3, color: 'yellow', imageFilename: 'card_zoom-112.png', game: 'base' },
+        { type: 'Ship', subtype: 'Pinace', swords: 4, coins : 3, color: 'yellow', imageFilename: 'card_zoom-113.png', game: 'base' },
+        { type: 'Ship', subtype: 'Pinace', swords: 4, coins : 3, color: 'yellow', imageFilename: 'card_zoom-113.png', game: 'base' },
+        { type: 'Ship', subtype: 'Pinace', swords: 4, coins : 3, color: 'yellow', imageFilename: 'card_zoom-113.png', game: 'unterwegs' },
+        { type: 'Ship', subtype: 'Pinace', swords: 4, coins : 4, color: 'yellow', imageFilename: 'card_zoom-115.png', game: 'base' },
+        { type: 'TaxIncrease', subtype: 'minVictoryPoints', imageFilename: 'card_zoom-116.png', game: 'base' },
+        { type: 'TaxIncrease', subtype: 'minVictoryPoints', imageFilename: 'card_zoom-116.png', game: 'base' },
+        { type: 'TaxIncrease', subtype: 'maxSwords', imageFilename: 'card_zoom-118.png', game: 'base' },
+        { type: 'TaxIncrease', subtype: 'maxSwords', imageFilename: 'card_zoom-118.png', game: 'base' },
+        { type: 'Person', subtype: 'Gunner', victoryPoints: 1, hireingCosts : 4, imageFilename: 'card_zoom-120.png', game: 'justOneMoreContract' },
+        { type: 'Person', subtype: 'Gunner', victoryPoints: 2, hireingCosts : 6, imageFilename: 'card_zoom-121.png', game: 'justOneMoreContract' },
+        { type: 'Person', subtype: 'Gunner', victoryPoints: 2, hireingCosts : 6, imageFilename: 'card_zoom-121.png', game: 'justOneMoreContract' },
+        { type: 'Person', subtype: 'Gunner', victoryPoints: 3, hireingCosts : 8, imageFilename: 'card_zoom-123.png', game: 'justOneMoreContract' },
+        { type: 'Person', subtype: 'Vice Admiral', victoryPoints: 1, hireingCosts : 5, imageFilename: 'card_zoom-124.png', game: 'justOneMoreContract' },
+        { type: 'Person', subtype: 'Vice Admiral', victoryPoints: 1, hireingCosts : 5, imageFilename: 'card_zoom-124.png', game: 'justOneMoreContract' },
+        { type: 'Person', subtype: 'Vice Admiral', victoryPoints: 2, hireingCosts : 7, imageFilename: 'card_zoom-126.png', game: 'justOneMoreContract' },
+        { type: 'Person', subtype: 'Vice Admiral', victoryPoints: 2, hireingCosts : 7, imageFilename: 'card_zoom-126.png', game: 'justOneMoreContract' },
+        { type: 'Person', subtype: 'Vice Admiral', victoryPoints: 3, hireingCosts : 9, imageFilename: 'card_zoom-128.png', game: 'justOneMoreContract' },
+        { type: 'Person', subtype: 'Clerk', victoryPoints: 3, hireingCosts : 9, color: 'green', imageFilename: 'card_zoom-129.png', game: 'justOneMoreContract' },
+        { type: 'Person', subtype: 'Clerk', victoryPoints: 2, hireingCosts : 6, color: 'blue', imageFilename: 'card_zoom-130.png', game: 'justOneMoreContract' },
+        { type: 'Person', subtype: 'Clerk', victoryPoints: 2, hireingCosts : 6, color: 'red', imageFilename: 'card_zoom-131.png', game: 'justOneMoreContract' },
+        { type: 'Person', subtype: 'Clerk', victoryPoints: 1, hireingCosts : 4, color: 'black', imageFilename: 'card_zoom-132.png', game: 'justOneMoreContract' },
+        { type: 'Person', subtype: 'Clerk', victoryPoints: 1, hireingCosts : 4, color: 'yellow', imageFilename: 'card_zoom-133.png', game: 'justOneMoreContract' },
+        { type: 'Ship', subtype: 'Skiff', swords: 3, coins : 3, extraCoin: 1, color: 'green', imageFilename: 'card_zoom-135.png', game: 'justOneMoreContract' },
+        { type: 'Ship', subtype: 'Flute', swords: 5, coins : 3, extraCoin: 1, color: 'blue', imageFilename: 'card_zoom-137.png', game: 'justOneMoreContract' },
+        { type: 'Ship', subtype: 'Frigate', swords: 6, coins : 3, extraCoin: 1, color: 'red', imageFilename: 'card_zoom-139.png', game: 'justOneMoreContract' },
+        { type: 'Ship', subtype: 'Galleon', swords: 99, coins : 3, extraCoin: 1, color: 'black', imageFilename: 'card_zoom-141.png', game: 'justOneMoreContract' },
+        { type: 'Ship', subtype: 'Pinace', swords: 2, coins : 1, color: 'yellow', imageFilename: 'card_zoom-142.png', game: 'justOneMoreContract' },
+        { type: 'Ship', subtype: 'Pinace', swords: 4, coins : 3, extraCoin: 1, color: 'yellow', imageFilename: 'card_zoom-143.png', game: 'justOneMoreContract' },
+        { type: 'Person', subtype: 'Passenger', victoryPoints: 2, hireingCosts : 4, imageFilename: 'card_zoom-144.png', game: 'unterwegs' },
+        { type: 'Person', subtype: 'Passenger', victoryPoints: 2, hireingCosts : 4, imageFilename: 'card_zoom-144.png', game: 'unterwegs' },
+        { type: 'Person', subtype: 'Passenger', victoryPoints: 2, hireingCosts : 4, imageFilename: 'card_zoom-144.png', game: 'unterwegs' },
+        { type: 'Person', subtype: 'Passenger', victoryPoints: 2, hireingCosts : 4, imageFilename: 'card_zoom-144.png', game: 'unterwegs' },
+        { type: 'Person', subtype: 'Passenger', victoryPoints: 2, hireingCosts : 4, imageFilename: 'card_zoom-144.png', game: 'unterwegs' },
+        { type: 'Person', subtype: 'Gambler', victoryPoints: 1, hireingCosts : 4, imageFilename: 'card_zoom-149.png', game: 'gambler' },
+        { type: 'Person', subtype: 'Gambler', victoryPoints: 1, hireingCosts : 4, imageFilename: 'card_zoom-149.png', game: 'gambler' },
+        { type: 'Person', subtype: 'Gambler', victoryPoints: 2, hireingCosts : 6, imageFilename: 'card_zoom-151.png', game: 'gambler' },
+        { type: 'Person', subtype: 'Gambler', victoryPoints: 3, hireingCosts : 8, imageFilename: 'card_zoom-152.png', game: 'gambler' },
+        { type: 'Person', subtype: 'WholeSaler', victoryPoints: 2, hireingCosts : 6, color: 'green' imageFilename: 'card_zoom-153.png', game: 'unterwegs' },
+        { type: 'Person', subtype: 'WholeSaler', victoryPoints: 3, hireingCosts : 8, color: 'blue' imageFilename: 'card_zoom-154.png', game: 'unterwegs' },
+        { type: 'Person', subtype: 'WholeSaler', victoryPoints: 2, hireingCosts : 6, color: 'red' imageFilename: 'card_zoom-155.png', game: 'unterwegs' },
+        { type: 'Person', subtype: 'WholeSaler', victoryPoints: 2, hireingCosts : 6, color: 'black' imageFilename: 'card_zoom-156.png', game: 'unterwegs' },
+        { type: 'Person', subtype: 'WholeSaler', victoryPoints: 3, hireingCosts : 8, color: 'yellow' imageFilename: 'card_zoom-157.png', game: 'unterwegs' },
       ]),
     },
     activePlayer: 0,
@@ -393,11 +556,18 @@ const PortRoyal = {
     playerNumMademoiselles: Array(ctx.numPlayers).fill(0),
     playerNumJesters: Array(ctx.numPlayers).fill(0),
     playerNumAdmirals: Array(ctx.numPlayers).fill(0),
+    playerNumViceAdmirals: Array(ctx.numPlayers).fill(0),
+    playerNumGunners: Array(ctx.numPlayers).fill(0),
     playerNumGreenTraders: Array(ctx.numPlayers).fill(0),
     playerNumBlueTraders: Array(ctx.numPlayers).fill(0),
     playerNumRedTraders: Array(ctx.numPlayers).fill(0),
     playerNumBlackTraders: Array(ctx.numPlayers).fill(0),
     playerNumYellowTraders: Array(ctx.numPlayers).fill(0),
+    playerNumGreenClerks: Array(ctx.numPlayers).fill(0),
+    playerNumBlueClerks: Array(ctx.numPlayers).fill(0),
+    playerNumRedClerks: Array(ctx.numPlayers).fill(0),
+    playerNumBlackClerks: Array(ctx.numPlayers).fill(0),
+    playerNumYellowClerks: Array(ctx.numPlayers).fill(0),
     harborDisplayShips: [],
     harborDisplayNonShips: [],
     shipToRepel: null,

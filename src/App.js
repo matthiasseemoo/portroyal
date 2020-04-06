@@ -5,10 +5,6 @@ import { applyMiddleware, compose } from 'redux';
 import PortRoyal from "./game";
 import Board from "./board";
 
-// TODO: expedition
-// TODO: game board
-// TODO: handle invalid moves: https://boardgame.io/documentation/#/immutability?id=invalid-moves
-
 const App = Client({
   game: PortRoyal,
   board: Board,
