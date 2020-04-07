@@ -2,7 +2,6 @@ import { PlayerView } from 'boardgame.io/core';
 import { INVALID_MOVE } from 'boardgame.io/core';
 
 // TODO: expedition
-// TODO: ships with extra coins
 // TODO: game board
 // TODO: skip turns automatically if nothing can be done
 // TODO: handle invalid moves: https://boardgame.io/documentation/#/immutability?id=invalid-moves
@@ -21,13 +20,178 @@ function DbgGetSwords(G, ctx, amount) {
     G.playerSwords[ctx.currentPlayer] += amount;
 }
 
-function TradeShip(G, ctx, cardIndex) {
-  if ((G.drawCount > 0) && (cardIndex < G.harborDisplayShips.length)) {
+function FulfillExpedition(G, ctx, cardIndex) {
+  if ((cardIndex >= 0) && (cardIndex < G.expeditionDisplay.length)) {
+    const expedition = G.expeditionDisplay[cardIndex];
+
+    let captainIndices = [];
+    let priestIndices = [];
+    let settlerIndices = [];
+    let jackOfAllTradesIndices = [];
+
+    for (let i = 0; i < G.playerDisplays[ctx.currentPlayer]; i++) {
+      if (G.playerDisplays[ctx.currentPlayer][i].subtype === 'Captain') {
+        captainIndices.push(i);
+      } else if (G.playerDisplays[ctx.currentPlayer][i].subtype === 'Priest') {
+        priestIndices.push(i);
+      } else if (G.playerDisplays[ctx.currentPlayer][i].subtype === 'Settler') {
+        settlerIndices.push(i);
+      } else if (G.playerDisplays[ctx.currentPlayer][i].subtype === 'JackOfAllTrades') {
+        jackOfAllTradesIndices.push(i);
+      }
+    }
+
+    let cardsToReplaceIndices = [];
+
+    if (expedition.subtype === 'anchorCrossHouse') {
+      if (captainIndices.length > 0) {
+        cardsToReplaceIndices.push(captainIndices.splice(0, 1));
+      } else if (jackOfAllTradesIndices.length > 0) {
+        cardsToReplaceIndices.push(jackOfAllTradesIndices.splice(0, 1));
+      } else {
+        return INVALID_MOVE;
+      }
+
+      if (priestIndices.length > 0) {
+        cardsToReplaceIndices.push(priestIndices.splice(0, 1));
+      } else if (jackOfAllTradesIndices.length > 0) {
+        cardsToReplaceIndices.push(jackOfAllTradesIndices.splice(0, 1));
+      } else {
+        return INVALID_MOVE;
+      }
+
+      if (settlerIndices.length > 0) {
+        cardsToReplaceIndices.push(settlerIndices.splice(0, 1));
+      } else if (jackOfAllTradesIndices.length > 0) {
+        cardsToReplaceIndices.push(jackOfAllTradesIndices.splice(0, 1));
+      } else {
+        return INVALID_MOVE;
+      }
+    } else if (expedition.subtype === 'doubleAnchor') {
+      if (captainIndices.length > 0) {
+        cardsToReplaceIndices.push(captainIndices.splice(0, 1));
+      } else if (jackOfAllTradesIndices.length > 0) {
+        cardsToReplaceIndices.push(jackOfAllTradesIndices.splice(0, 1));
+      } else {
+        return INVALID_MOVE;
+      }
+
+      if (captainIndices.length > 0) {
+        cardsToReplaceIndices.push(captainIndices.splice(0, 1));
+      } else if (jackOfAllTradesIndices.length > 0) {
+        cardsToReplaceIndices.push(jackOfAllTradesIndices.splice(0, 1));
+      } else {
+        return INVALID_MOVE;
+      }
+    } else if (expedition.subtype === 'doubleCross') {
+      if (priestIndices.length > 0) {
+        cardsToReplaceIndices.push(priestIndices.splice(0, 1));
+      } else if (jackOfAllTradesIndices.length > 0) {
+        cardsToReplaceIndices.push(jackOfAllTradesIndices.splice(0, 1));
+      } else {
+        return INVALID_MOVE;
+      }
+
+      if (priestIndices.length > 0) {
+        cardsToReplaceIndices.push(priestIndices.splice(0, 1));
+      } else if (jackOfAllTradesIndices.length > 0) {
+        cardsToReplaceIndices.push(jackOfAllTradesIndices.splice(0, 1));
+      } else {
+        return INVALID_MOVE;
+      }
+    } else if (expedition.subtype === 'doubleHouse') {
+      if (settlerIndices.length > 0) {
+        cardsToReplaceIndices.push(settlerIndices.splice(0, 1));
+      } else if (jackOfAllTradesIndices.length > 0) {
+        cardsToReplaceIndices.push(jackOfAllTradesIndices.splice(0, 1));
+      } else {
+        return INVALID_MOVE;
+      }
+
+      if (settlerIndices.length > 0) {
+        cardsToReplaceIndices.push(settlerIndices.splice(0, 1));
+      } else if (jackOfAllTradesIndices.length > 0) {
+        cardsToReplaceIndices.push(jackOfAllTradesIndices.splice(0, 1));
+      } else {
+        return INVALID_MOVE;
+      }
+    } else if (expedition.subtype === 'doubleAnchorHouse') {
+      if (captainIndices.length > 0) {
+        cardsToReplaceIndices.push(captainIndices.splice(0, 1));
+      } else if (jackOfAllTradesIndices.length > 0) {
+        cardsToReplaceIndices.push(jackOfAllTradesIndices.splice(0, 1));
+      } else {
+        return INVALID_MOVE;
+      }
+
+      if (captainIndices.length > 0) {
+        cardsToReplaceIndices.push(captainIndices.splice(0, 1));
+      } else if (jackOfAllTradesIndices.length > 0) {
+        cardsToReplaceIndices.push(jackOfAllTradesIndices.splice(0, 1));
+      } else {
+        return INVALID_MOVE;
+      }
+
+      if (settlerIndices.length > 0) {
+        cardsToReplaceIndices.push(settlerIndices.splice(0, 1));
+      } else if (jackOfAllTradesIndices.length > 0) {
+        cardsToReplaceIndices.push(jackOfAllTradesIndices.splice(0, 1));
+      } else {
+        return INVALID_MOVE;
+      }
+    } else if (expedition.subtype === 'doubleCrossHouse') {
+      if (priestIndices.length > 0) {
+        cardsToReplaceIndices.push(priestIndices.splice(0, 1));
+      } else if (jackOfAllTradesIndices.length > 0) {
+        cardsToReplaceIndices.push(jackOfAllTradesIndices.splice(0, 1));
+      } else {
+        return INVALID_MOVE;
+      }
+
+      if (priestIndices.length > 0) {
+        cardsToReplaceIndices.push(priestIndices.splice(0, 1));
+      } else if (jackOfAllTradesIndices.length > 0) {
+        cardsToReplaceIndices.push(jackOfAllTradesIndices.splice(0, 1));
+      } else {
+        return INVALID_MOVE;
+      }
+
+      if (settlerIndices.length > 0) {
+        cardsToReplaceIndices.push(settlerIndices.splice(0, 1));
+      } else if (jackOfAllTradesIndices.length > 0) {
+        cardsToReplaceIndices.push(jackOfAllTradesIndices.splice(0, 1));
+      } else {
+        return INVALID_MOVE;
+      }
+    }
+
+    G.expeditionDisplay = G.expeditionDisplay.slice();
+    G.playerDisplays[ctx.currentPlayer] = G.playerDisplays[ctx.currentPlayer].concat(G.expeditionDisplay.splice(cardIndex, 1));
+    G.discardPile = G.discardPile.slice();
+    for (const index of cardsToReplaceIndices) {
+      G.discardPile.push(G.playerDisplays[ctx.currentPlayer].splice(index, 1));
+      G.playerCoins[ctx.currentPlayer]++;
+    }
+  }
+}
+
+function TradeShip(G, ctx, cardIndex, playerId) {
+  if ((G.drawCount > 0) && (cardIndex >= 0) && (cardIndex < G.harborDisplayShips.length)) {
     let tradedShip = G.harborDisplayShips[cardIndex];
+
+    if (tradedShip.extraCoin === true) {
+      if (!((playerId >= 0) && (playerId < ctx.numPlayers) && (playerId !== ctx.currentPlayer))) {
+        // If ship has an extra coin for another player, playerId needs to be set to a valid value
+        return INVALID_MOVE;
+      }
+    }
 
     // Add coins to player and check whether there are cards to take
     G.playerCoins = G.playerCoins.slice();
     G.playerCoins[ctx.currentPlayer] += tradedShip.coins;
+
+    // Add extra coin to selected playerId
+    G.playerCoins[playerId] += 1;
 
     // if other players take cards, one coin needs to be given to the active player.
     if (G.activePlayer !== ctx.currentPlayer) {
@@ -38,23 +202,23 @@ function TradeShip(G, ctx, cardIndex) {
     if (tradedShip.color === 'green') {
       G.playerCoins[ctx.currentPlayer] += G.playerNumGreenTraders[ctx.currentPlayer];
       G.drawCount += G.playerNumGreenClerks[ctx.currentPlayer];
-      G.playerVictoryPoints += G.playerNumGreenWholeSalers[ctx.currentPlayer];
+      G.playerVictoryPoints[ctx.currentPlayer] += G.playerNumGreenWholeSalers[ctx.currentPlayer];
     } else if (tradedShip.color === 'blue') {
       G.playerCoins[ctx.currentPlayer] += G.playerNumBlueTraders[ctx.currentPlayer];
       G.drawCount += G.playerNumBlueClerks[ctx.currentPlayer];
-      G.playerVictoryPoints += G.playerNumBlueWholeSalers[ctx.currentPlayer];
+      G.playerVictoryPoints[ctx.currentPlayer] += G.playerNumBlueWholeSalers[ctx.currentPlayer];
     } else if (tradedShip.color === 'red') {
       G.playerCoins[ctx.currentPlayer] += G.playerNumRedTraders[ctx.currentPlayer];
       G.drawCount += G.playerNumRedClerks[ctx.currentPlayer];
-      G.playerVictoryPoints += G.playerNumRedWholeSalers[ctx.currentPlayer];
+      G.playerVictoryPoints[ctx.currentPlayer] += G.playerNumRedWholeSalers[ctx.currentPlayer];
     } else if (tradedShip.color === 'black') {
       G.playerCoins[ctx.currentPlayer] += G.playerNumBlackTraders[ctx.currentPlayer];
       G.drawCount += G.playerNumBlackClerks[ctx.currentPlayer];
-      G.playerVictoryPoints += G.playerNumBlackWholeSalers[ctx.currentPlayer];
+      G.playerVictoryPoints[ctx.currentPlayer] += G.playerNumBlackWholeSalers[ctx.currentPlayer];
     } else if (tradedShip.color === 'yellow') {
       G.playerCoins[ctx.currentPlayer] += G.playerNumYellowTraders[ctx.currentPlayer];
       G.drawCount += G.playerNumYellowClerks[ctx.currentPlayer];
-      G.playerVictoryPoints += G.playerNumYellowWholeSalers[ctx.currentPlayer];
+      G.playerVictoryPoints[ctx.currentPlayer] += G.playerNumYellowWholeSalers[ctx.currentPlayer];
     }
     
     // Add Ship to discard pile
@@ -70,12 +234,14 @@ function TradeShip(G, ctx, cardIndex) {
     if (G.drawCount === 0) {
       ctx.events.endTurn();
     }
+  } else {
+    return INVALID_MOVE;
   }
 }
 
 function HirePerson(G, ctx, cardIndex) {
   // Check whether another card can be taken and check whether there are cards to take
-  if ((G.drawCount > 0) && (cardIndex < G.harborDisplayNonShips.length)) {
+  if ((G.drawCount > 0) && (cardIndex >= 0) && (cardIndex < G.harborDisplayNonShips.length)) {
     let hiredPerson = G.harborDisplayNonShips[cardIndex];
     let extracost = -G.playerNumMademoiselles[ctx.currentPlayer];
     if (G.activePlayer === ctx.currentPlayer) extracost += 1;
@@ -190,6 +356,8 @@ function HirePerson(G, ctx, cardIndex) {
         ctx.events.endTurn();
       }
     }
+  } else {
+    return INVALID_MOVE;
   }
 }
 
@@ -248,8 +416,7 @@ function DrawCardGambling(G, ctx, gambling) {
 
   let discardHarborDisplay = false;
   for (let d = 0; d < drawAmount; d++) {
-    // TODO: slice?
-    let drawnCard = G.secret.drawPile[0];
+    let drawnCard = G.secret.drawPile.slice(0,1)[0];
     G.secret.drawPile = G.secret.drawPile.slice(1);
 
     if (drawnCard.type === 'Expedition') {
@@ -572,12 +739,12 @@ const PortRoyal = {
         { type: 'Person', subtype: 'Clerk', victoryPoints: 2, hireingCosts : 6, color: 'red', imageFilename: 'card_zoom-131.png', game: 'justOneMoreContract' },
         { type: 'Person', subtype: 'Clerk', victoryPoints: 1, hireingCosts : 4, color: 'black', imageFilename: 'card_zoom-132.png', game: 'justOneMoreContract' },
         { type: 'Person', subtype: 'Clerk', victoryPoints: 1, hireingCosts : 4, color: 'yellow', imageFilename: 'card_zoom-133.png', game: 'justOneMoreContract' },
-        { type: 'Ship', subtype: 'Skiff', swords: 3, coins : 3, extraCoin: 1, color: 'green', imageFilename: 'card_zoom-135.png', game: 'justOneMoreContract' },
-        { type: 'Ship', subtype: 'Flute', swords: 5, coins : 3, extraCoin: 1, color: 'blue', imageFilename: 'card_zoom-137.png', game: 'justOneMoreContract' },
-        { type: 'Ship', subtype: 'Frigate', swords: 6, coins : 3, extraCoin: 1, color: 'red', imageFilename: 'card_zoom-139.png', game: 'justOneMoreContract' },
-        { type: 'Ship', subtype: 'Galleon', swords: 99, coins : 3, extraCoin: 1, color: 'black', imageFilename: 'card_zoom-141.png', game: 'justOneMoreContract' },
+        { type: 'Ship', subtype: 'Skiff', swords: 3, coins : 3, extraCoin: true, color: 'green', imageFilename: 'card_zoom-135.png', game: 'justOneMoreContract' },
+        { type: 'Ship', subtype: 'Flute', swords: 5, coins : 3, extraCoin: true, color: 'blue', imageFilename: 'card_zoom-137.png', game: 'justOneMoreContract' },
+        { type: 'Ship', subtype: 'Frigate', swords: 6, coins : 3, extraCoin: true, color: 'red', imageFilename: 'card_zoom-139.png', game: 'justOneMoreContract' },
+        { type: 'Ship', subtype: 'Galleon', swords: 99, coins : 3, extraCoin: true, color: 'black', imageFilename: 'card_zoom-141.png', game: 'justOneMoreContract' },
         { type: 'Ship', subtype: 'Pinace', swords: 2, coins : 1, color: 'yellow', imageFilename: 'card_zoom-142.png', game: 'justOneMoreContract' },
-        { type: 'Ship', subtype: 'Pinace', swords: 4, coins : 3, extraCoin: 1, color: 'yellow', imageFilename: 'card_zoom-143.png', game: 'justOneMoreContract' },
+        { type: 'Ship', subtype: 'Pinace', swords: 4, coins : 3, extraCoin: true, color: 'yellow', imageFilename: 'card_zoom-143.png', game: 'justOneMoreContract' },
         { type: 'Person', subtype: 'Passenger', victoryPoints: 2, hireingCosts : 4, imageFilename: 'card_zoom-144.png', game: 'unterwegs' },
         { type: 'Person', subtype: 'Passenger', victoryPoints: 2, hireingCosts : 4, imageFilename: 'card_zoom-144.png', game: 'unterwegs' },
         { type: 'Person', subtype: 'Passenger', victoryPoints: 2, hireingCosts : 4, imageFilename: 'card_zoom-144.png', game: 'unterwegs' },
@@ -635,7 +802,7 @@ const PortRoyal = {
 
     stages: {
       discover: {
-        moves: { EndStage, DrawCardGambling, DbgGetCoins, DbgGetSwords },
+        moves: { EndStage, DrawCardGambling, FulfillExpedition, DbgGetCoins, DbgGetSwords },
         next: 'tradeAndHire',
       },
 
@@ -645,7 +812,7 @@ const PortRoyal = {
       },
 
       tradeAndHire: {
-        moves: { EndStage, HirePerson, TradeShip },
+        moves: { EndStage, HirePerson, TradeShip, FulfillExpedition },
       },
     },
   },

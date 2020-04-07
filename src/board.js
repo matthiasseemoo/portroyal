@@ -13,12 +13,16 @@ class Board extends React.Component {
     isMultiplayer: PropTypes.bool,
   };
 
-  tradeShip(cardIndex) {
+  fulfillExpedition(cardIndex) {
+    this.props.moves.FulfillExpedition(cardIndex);
+  }
+
+  tradeShip(cardIndex, playerId) {
     if (this.props.ctx.activePlayers[this.props.playerID] === 'discover') {
       this.props.moves.EndStage();
     }
 
-    this.props.moves.TradeShip(cardIndex);
+    this.props.moves.TradeShip(cardIndex, playerId);
   }
 
   hirePerson(cardIndex) {
@@ -49,12 +53,23 @@ class Board extends React.Component {
 
     let shipToRepel = [];
     if (this.props.G.shipToRepel !== null) {
-      shipToRepel.push(<li className='card' style={{ position: 'relative',  }}><img className='cardImageLarge' src={require('./images/' + this.props.G.shipToRepel.imageFilename)} /><input style={{ position: 'absolute', left: '0px', bottom: '4em', width: '100%' }} type="button" value="Repel" onClick={() => this.props.moves.RepelShip(true)} /><input style={{ position: 'absolute', left: '0px', bottom: '6em', width: '100%' }} type="button" value="Keep" onClick={() => this.props.moves.RepelShip(false)} /></li>);
+      shipToRepel.push(<li className='card' style={{ position: 'relative' }}><img className='cardImageLarge' src={require('./images/' + this.props.G.shipToRepel.imageFilename)} /><input style={{ position: 'absolute', left: '0px', bottom: '4em', width: '100%' }} type="button" value="Repel" onClick={() => this.props.moves.RepelShip(true)} /><input style={{ position: 'absolute', left: '0px', bottom: '6em', width: '100%' }} type="button" value="Keep" onClick={() => this.props.moves.RepelShip(false)} /></li>);
     }
 
     let harborDisplayShips = [];
     for (let i = 0; i < this.props.G.harborDisplayShips.length; i++) {
-      harborDisplayShips.push(<li className='card'><img onClick={() => this.tradeShip(i) } className='cardImage' src={require('./images/' + this.props.G.harborDisplayShips[i].imageFilename)} /></li>);
+      if (this.props.G.harborDisplayShips[i].extraCoin === true) {
+        let buttons = [];
+        let distanceCounter = 0;
+        for (let j = 0; j < this.props.ctx.numPlayers; j++) {
+          if (j !== parseInt(this.props.ctx.currentPlayer)) {
+            buttons.push(<input style={{ position: 'absolute', left: '0px', bottom: ((4 + 2 * distanceCounter++) + 'em'), width: '100%' }} type="button" value={ "Player " + j } onClick={() => this.tradeShip(i, j)} />);
+          }
+        }
+        harborDisplayShips.push(<li className='card' style={{ position: 'relative' }}><img className='cardImageLarge' src={require('./images/' + this.props.G.harborDisplayShips[i].imageFilename)} />{buttons}</li>);
+      } else {
+        harborDisplayShips.push(<li className='card'><img onClick={() => this.tradeShip(i) } className='cardImage' src={require('./images/' + this.props.G.harborDisplayShips[i].imageFilename)} /></li>);
+      }
     }
 
     let harborDisplayNonShips = [];
@@ -64,7 +79,7 @@ class Board extends React.Component {
 
     let expeditionDisplay = [];
     for (let i = 0; i < this.props.G.expeditionDisplay.length; i++) {
-      expeditionDisplay.push(<li className='card'><img className='cardImage' src={require('./images/' + this.props.G.expeditionDisplay[i].imageFilename)} /></li>);
+      expeditionDisplay.push(<li className='card'><img onClick={() => this.fulfillExpedition(i) } className='cardImage' src={require('./images/' + this.props.G.expeditionDisplay[i].imageFilename)} /></li>);
     }
 
     let discardPile = [];
@@ -86,8 +101,8 @@ class Board extends React.Component {
         otherPlayerDisplays.push(
           <div>
             <h1>Player {i},
-              <img style={{ height: '1em' }} src={require('./images/points.png')} />: {this.props.G.playerVictoryPoints[i]},
-              <img style={{ height: '1em' }} src={require('./images/coin.png')} />: {this.props.G.playerCoins[i]},
+              &nbsp;<img style={{ height: '1em' }} src={require('./images/points.png')} />: {this.props.G.playerVictoryPoints[i]},
+              &nbsp;<img style={{ height: '1em' }} src={require('./images/coin.png')} />: {this.props.G.playerCoins[i]},
               Swords: {this.props.G.playerSwords[i]},
               Admirals: {this.props.G.playerNumAdmirals[i]},
               Jesters: {this.props.G.playerNumJesters[i]},
@@ -125,8 +140,8 @@ class Board extends React.Component {
       activePlayerDisplay.push(
         <div>
           <h1>Player {this.props.playerID},
-            <img style={{ height: '1em' }} src={require('./images/points.png')} />: {this.props.G.playerVictoryPoints[this.props.playerID]}, 
-            <img style={{ height: '1em' }} src={require('./images/coin.png')} />: {this.props.G.playerCoins[this.props.playerID]},
+            &nbsp;<img style={{ height: '1em' }} src={require('./images/points.png')} />: {this.props.G.playerVictoryPoints[this.props.playerID]}, 
+            &nbsp;<img style={{ height: '1em' }} src={require('./images/coin.png')} />: {this.props.G.playerCoins[this.props.playerID]},
             Swords: {this.props.G.playerSwords[this.props.playerID]},
             Admirals: {this.props.G.playerNumAdmirals[this.props.playerID]},
             Jesters: {this.props.G.playerNumJesters[this.props.playerID]},
