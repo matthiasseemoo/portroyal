@@ -1,7 +1,7 @@
 import { PlayerView } from 'boardgame.io/core';
 import { INVALID_MOVE } from 'boardgame.io/core';
 
-// TODO: expedition
+// TODO: expedition (test if it is woring)
 // TODO: game board
 // TODO: skip turns automatically if nothing can be done
 // TODO: handle invalid moves: https://boardgame.io/documentation/#/immutability?id=invalid-moves
@@ -499,7 +499,7 @@ function DrawCardGambling(G, ctx, gambling) {
 
 function BeginTurn(G, ctx) {
   let turnmod = (ctx.turn - 1) % (ctx.numPlayers * (ctx.numPlayers + 1));
-  G.endTurnAutomatically = false;
+  G.endTurnAutomatically[ctx.currentPlayer] = Array(ctx.numPlayers).fill(0);
 
   // Count how many cards a player can draw
   G.drawCount = 1;
@@ -519,7 +519,7 @@ function BeginTurn(G, ctx) {
     G.discardPile = G.discardPile.concat(G.harborDisplayShips);
     G.harborDisplayShips = [];
     // A periodic task in the client will check for this value to decide whether to end a turn automatically
-    G.endTurnAutomatically = true;
+    G.endTurnAutomatically[ctx.currentPlayer] = true;
   } else {
     // Get one coin for each Jester
     if ((G.playerNumJesters > 0) && (G.harborDisplayShips === 0) && (G.harborDisplayNonShips === 0)) {
@@ -551,7 +551,7 @@ function BeginTurn(G, ctx) {
 
     // Let the board automatically end the turn, if there are no meaningful cards left
     if ((G.harborDisplayShips.length === 0) && (G.harborDisplayNonShips.length === 0)) {
-      G.endTurnAutomatically = true;
+      G.endTurnAutomatically[ctx.currentPlayer] = true;
     }
   }
 }
@@ -801,7 +801,7 @@ const PortRoyal = {
     shipToRepel: null,
     expeditionDisplay: [],
     discardPile: [],
-    endTurnAutomatically: false,
+    endTurnAutomatically: Array(ctx.numPlayers).fill(false),
   }),
 
   turn: {

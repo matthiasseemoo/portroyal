@@ -1,5 +1,9 @@
-.board h1 {
+.board {
+	padding: 1em 1em 1em 1em;
 	font-family: 'Romance Fatal Serif Std';
+}
+
+.board h1 {
 	font-size: 1em;
 }
 
