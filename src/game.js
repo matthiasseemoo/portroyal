@@ -499,6 +499,7 @@ function DrawCardGambling(G, ctx, gambling) {
 
 function BeginTurn(G, ctx) {
   let turnmod = (ctx.turn - 1) % (ctx.numPlayers * (ctx.numPlayers + 1));
+  G.endTurnAutomatically = false;
 
   // Count how many cards a player can draw
   G.drawCount = 1;
@@ -517,8 +518,8 @@ function BeginTurn(G, ctx) {
     G.harborDisplayNonShips = [];
     G.discardPile = G.discardPile.concat(G.harborDisplayShips);
     G.harborDisplayShips = [];
-    // We somehow should end the turn
-    ctx.events.endTurn(1);
+    // A periodic task in the client will check for this value to decide whether to end a turn automatically
+    G.endTurnAutomatically = true;
   } else {
     // Get one coin for each Jester
     if ((G.playerNumJesters > 0) && (G.harborDisplayShips === 0) && (G.harborDisplayNonShips === 0)) {
@@ -547,6 +548,11 @@ function BeginTurn(G, ctx) {
 
     // Only trade&hire
     ctx.events.setStage('tradeAndHire');
+
+    // Let the board automatically end the turn, if there are no meaningful cards left
+    if ((G.harborDisplayShips.length === 0) && (G.harborDisplayNonShips.length === 0)) {
+      G.endTurnAutomatically = true;
+    }
   }
 }
 
@@ -795,6 +801,7 @@ const PortRoyal = {
     shipToRepel: null,
     expeditionDisplay: [],
     discardPile: [],
+    endTurnAutomatically: false,
   }),
 
   turn: {

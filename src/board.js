@@ -13,6 +13,14 @@ class Board extends React.Component {
     isMultiplayer: PropTypes.bool,
   };
 
+  componentWillMount() {
+    setInterval(() => {
+      if (this.props.G.endTurnAutomatically === true) {
+        this.props.events.endTurn();
+      }
+    }, 100);
+  }
+
   fulfillExpedition(cardIndex) {
     this.props.moves.FulfillExpedition(cardIndex);
   }
