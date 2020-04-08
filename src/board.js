@@ -184,7 +184,10 @@ class Board extends React.Component {
       <div>
         <div style={{ padding: '1em 1em 1em 1em', backgroundColor: '#990000' }} >
           <img style={{ height: '4em' }} src={require('./images/titlelogo.png')} />
-          <input type="button" value="continue" onClick={() => this.props.moves.EndStage()} />
+          <div>
+            Currently in: { (this.props.ctx.activePlayers !== null) ? this.props.ctx.activePlayers[this.props.playerID] : '' }&nbsp;
+            <input type="button" value="continue" onClick={() => this.props.moves.EndStage()} />
+          </div>
         </div>
         <div className="board">
           {otherPlayerDisplays}
