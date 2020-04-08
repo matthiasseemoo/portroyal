@@ -6,7 +6,7 @@ import { INVALID_MOVE } from 'boardgame.io/core';
 // TODO: skip turns automatically if nothing can be done
 // TODO: handle invalid moves: https://boardgame.io/documentation/#/immutability?id=invalid-moves
 
-function ShuffleDrawPile(G, ctx) {
+function DbgShuffleDrawPile(G, ctx) {
   G.secret.drawPile = ctx.random.Shuffle(G.secret.drawPile);
 }
 
@@ -378,26 +378,16 @@ function RepelShip(G, ctx, doRepel) {
       }
     }
 
+    G.harborDisplayShips  = G.harborDisplayShips.concat([drawnCard]);
     if (discardHarborDisplay) {
-      G.discardPile = G.discardPile.concat([drawnCard]);
-      G.discardPile = G.discardPile.concat(G.harborDisplayNonShips);
-      G.harborDisplayNonShips = [];
-      G.discardPile = G.discardPile.concat(G.harborDisplayShips);
-      G.harborDisplayShips = [];
-      // Get one coin for each Jester
-      if (G.playerNumJesters > 0) {
-        G.playerCoins = G.playerCoins.slice();
-        G.playerCoins[ctx.currentPlayer] += G.playerNumJesters[ctx.currentPlayer];
-      }
-      ctx.events.endTurn();
+      ctx.events.setStage('discoverFailed');
     } else {
-      G.harborDisplayShips  = G.harborDisplayShips.concat([drawnCard]);
       ctx.events.setStage('discover');
     }
   }
 }
 
-function DrawCardGambling(G, ctx, gambling) {
+function DrawCard(G, ctx, gambling) {
   if ((G.gambleCount > 0) && !((gambling === true) || (gambling === 1))) {
     // only gambling is allowed
     return INVALID_MOVE;
@@ -436,63 +426,15 @@ function DrawCardGambling(G, ctx, gambling) {
           }
         }
 
+        G.harborDisplayShips  = G.harborDisplayShips.concat([drawnCard]);
         // only discard cards if we have drawn the last card that had to be drawn
         if (discardHarborDisplay && (d === (drawAmount - 1))) {
-          G.discardPile = G.discardPile.concat([drawnCard]);
-          G.discardPile = G.discardPile.concat(G.harborDisplayNonShips);
-          G.harborDisplayNonShips = [];
-          G.discardPile = G.discardPile.concat(G.harborDisplayShips);
-          G.harborDisplayShips = [];
-          // Get one coin for each Jester
-          if (G.playerNumJesters > 0) {
-            G.playerCoins = G.playerCoins.slice();
-            G.playerCoins[ctx.currentPlayer] += G.playerNumJesters[ctx.currentPlayer];
-          }
-          ctx.events.endTurn();
-        } else {
-          G.harborDisplayShips  = G.harborDisplayShips.concat([drawnCard]);
+          ctx.events.setStage('discoverFailed');
         }
       }
     } else if (drawnCard.type === 'TaxIncrease') {
-      let minVictoryPoints = Infinity;
-      let maxSwords = 0;
-
-      let newPlayerCoins = G.playerCoins.slice();
-
-      // Count min. victory points and max. swords and remove cards from players with more than or equal to 12 cards
-      for (let i = 0; i < ctx.numPlayers; i++) {
-        if (G.playerVictoryPoints[i] < minVictoryPoints) {
-          minVictoryPoints = G.playerVictoryPoints[i];
-        }
-
-        if (G.playerSwords[i] > maxSwords) {
-          maxSwords = G.playerSwords[i];
-        }
-
-        if (G.playerCoins[i] >= 12) {
-          newPlayerCoins[i] = Math.round(G.playerCoins[i] / 2);
-        }
-      }
-
-      if (drawnCard.subtype === 'minVictoryPoints') {
-        for (let i = 0; i < ctx.numPlayers; i++) {
-          if (G.playerVictoryPoints[i] === minVictoryPoints) {
-            newPlayerCoins[i]++;
-          }
-        }
-      }
-
-      if (drawnCard.subtype === 'maxSwords') {
-        for (let i = 0; i < ctx.numPlayers; i++) {
-          if (G.playerSwords[i] === maxSwords) {
-            newPlayerCoins[i]++;
-          }
-        }
-      }
-
-      G.playerCoins = newPlayerCoins;
-
-      G.discardPile = G.discardPile.concat([drawnCard]);
+      G.drawnTaxIncrease = drawnCard;
+      ctx.events.setStage('handleTaxIncrease');
     }
   }
 }
@@ -584,6 +526,60 @@ function EndStage(G, ctx) {
       G.drawCount += G.harborDisplayShips.length - 3;
     }
     ctx.events.setStage('tradeAndHire');
+  } else if (currentStage === 'discoverFailed') {
+    G.discardPile = G.discardPile.concat(G.harborDisplayNonShips);
+    G.harborDisplayNonShips = [];
+    G.discardPile = G.discardPile.concat(G.harborDisplayShips);
+    G.harborDisplayShips = [];
+    // Get one coin for each Jester
+    if (G.playerNumJesters > 0) {
+      G.playerCoins = G.playerCoins.slice();
+      G.playerCoins[ctx.currentPlayer] += G.playerNumJesters[ctx.currentPlayer];
+    }
+    ctx.events.endTurn();
+  } else if (currentStage === 'handleTaxIncrease') {
+    let minVictoryPoints = Infinity;
+    let maxSwords = 0;
+
+    let newPlayerCoins = G.playerCoins.slice();
+
+    // Count min. victory points and max. swords and remove cards from players with more than or equal to 12 cards
+    for (let i = 0; i < ctx.numPlayers; i++) {
+      if (G.playerVictoryPoints[i] < minVictoryPoints) {
+        minVictoryPoints = G.playerVictoryPoints[i];
+      }
+
+      if (G.playerSwords[i] > maxSwords) {
+        maxSwords = G.playerSwords[i];
+      }
+
+      if (G.playerCoins[i] >= 12) {
+        newPlayerCoins[i] = Math.round(G.playerCoins[i] / 2);
+      }
+    }
+
+    if (G.drawnTaxIncrease.subtype === 'minVictoryPoints') {
+      for (let i = 0; i < ctx.numPlayers; i++) {
+        if (G.playerVictoryPoints[i] === minVictoryPoints) {
+          newPlayerCoins[i]++;
+        }
+      }
+    }
+
+    if (G.drawnTaxIncrease.subtype === 'maxSwords') {
+      for (let i = 0; i < ctx.numPlayers; i++) {
+        if (G.playerSwords[i] === maxSwords) {
+          newPlayerCoins[i]++;
+        }
+      }
+    }
+
+    G.playerCoins = newPlayerCoins;
+
+    G.discardPile = G.discardPile.concat([G.drawnTaxIncrease]);
+    G.drawnTaxIncrease = null;
+    // return to discovery
+    ctx.events.endStage();
   } else if (currentStage === 'repelShip') {
     RepelShip(G, ctx, false);
   } else if (currentStage === 'tradeAndHire') {
@@ -771,7 +767,7 @@ const PortRoyal = {
     drawCount: 0,
     gambleCount: 0,
     playerDisplays: Array(ctx.numPlayers).fill([]),
-    playerCoins: Array(ctx.numPlayers).fill(0),
+    playerCoins: Array(ctx.numPlayers).fill(3),
     playerSwords: Array(ctx.numPlayers).fill(0),
     playerVictoryPoints: Array(ctx.numPlayers).fill(0),
     playerNumGovenors: Array(ctx.numPlayers).fill(0),
@@ -799,6 +795,7 @@ const PortRoyal = {
     harborDisplayShips: [],
     harborDisplayNonShips: [],
     shipToRepel: null,
+    drawnTaxIncrease: null,
     expeditionDisplay: [],
     discardPile: [],
     endTurnAutomatically: Array(ctx.numPlayers).fill(false),
@@ -809,8 +806,17 @@ const PortRoyal = {
 
     stages: {
       discover: {
-        moves: { EndStage, DrawCardGambling, FulfillExpedition, DbgGetCoins, DbgGetSwords },
+        moves: { EndStage, DrawCard: { move: DrawCard, client: false }, FulfillExpedition, DbgGetCoins, DbgGetSwords, DbgShuffleDrawPile },
         next: 'tradeAndHire',
+      },
+
+      discoverFailed: {
+        moves: { EndStage },
+      },
+
+      handleTaxIncrease: {
+        moves: { EndStage },
+        next: 'discover',
       },
 
       repelShip: {
@@ -822,10 +828,6 @@ const PortRoyal = {
         moves: { EndStage, HirePerson, TradeShip, FulfillExpedition },
       },
     },
-  },
-
-  moves: {
-    ShuffleDrawPile,
   },
 
   events: {

@@ -61,7 +61,16 @@ class Board extends React.Component {
 
     let shipToRepel = [];
     if (this.props.G.shipToRepel !== null) {
-      shipToRepel.push(<li className='card' style={{ position: 'relative' }}><img className='cardImageLarge' src={require('./images/' + this.props.G.shipToRepel.imageFilename)} /><input style={{ position: 'absolute', left: '0px', bottom: '4em', width: '100%' }} type="button" value="Repel" onClick={() => this.props.moves.RepelShip(true)} /><input style={{ position: 'absolute', left: '0px', bottom: '6em', width: '100%' }} type="button" value="Keep" onClick={() => this.props.moves.RepelShip(false)} /></li>);
+      if (this.props.G.activePlayer === this.props.playerID) {
+        shipToRepel.push(<li className='card' style={{ position: 'relative' }}><img className='cardImageLarge' src={require('./images/' + this.props.G.shipToRepel.imageFilename)} /><input style={{ position: 'absolute', left: '0px', bottom: '4em', width: '100%' }} type="button" value="Repel" onClick={() => this.props.moves.RepelShip(true)} /><input style={{ position: 'absolute', left: '0px', bottom: '6em', width: '100%' }} type="button" value="Keep" onClick={() => this.props.moves.RepelShip(false)} /></li>);
+      } else {
+        shipToRepel.push(<li className='card' style={{ position: 'relative' }}><img className='cardImage' src={require('./images/' + this.props.G.shipToRepel.imageFilename)} /></li>);
+      }
+    }
+
+    let drawnTaxIncrease = [];
+    if (this.props.G.drawnTaxIncrease !== null) {
+      drawnTaxIncrease.push(<li className='card' style={{ position: 'relative' }}><img className='cardImage' src={require('./images/' + this.props.G.drawnTaxIncrease.imageFilename)} /></li>);
     }
 
     let harborDisplayShips = [];
@@ -74,7 +83,11 @@ class Board extends React.Component {
             buttons.push(<input style={{ position: 'absolute', left: '0px', bottom: ((4 + 2 * distanceCounter++) + 'em'), width: '100%' }} type="button" value={ "Player " + j } onClick={() => this.tradeShip(i, j)} />);
           }
         }
-        harborDisplayShips.push(<li className='card' style={{ position: 'relative' }}><img className='cardImageLarge' src={require('./images/' + this.props.G.harborDisplayShips[i].imageFilename)} />{buttons}</li>);
+        if (this.props.G.activePlayer === this.props.playerID) {
+          harborDisplayShips.push(<li className='card' style={{ position: 'relative' }}><img className='cardImageLarge' src={require('./images/' + this.props.G.harborDisplayShips[i].imageFilename)} />{buttons}</li>);
+        } else {
+          harborDisplayShips.push(<li className='card' style={{ position: 'relative' }}><img className='cardImage' src={require('./images/' + this.props.G.harborDisplayShips[i].imageFilename)} /></li>);
+        }
       } else {
         harborDisplayShips.push(<li className='card'><img onClick={() => this.tradeShip(i) } className='cardImage' src={require('./images/' + this.props.G.harborDisplayShips[i].imageFilename)} /></li>);
       }
@@ -123,7 +136,7 @@ class Board extends React.Component {
               &nbsp;<img style={{ height: '1em' }} src={require('./images/whole_saler.png')} />: {this.props.G.playerNumGreenWholeSalers[i] + this.props.G.playerNumBlueWholeSalers[i] + this.props.G.playerNumRedWholeSalers[i] + this.props.G.playerNumBlackWholeSalers[i] + this.props.G.playerNumYellowWholeSalers[i]},
               &nbsp;<img style={{ height: '1em' }} src={require('./images/gambler.png')} />: {this.props.G.playerNumGamblers[i]},
             </h1>
-            <ul style={{ overflow: 'auto', whiteSpace: 'nowrap' }}>
+            <ul style={{ overflow: 'auto', whiteSpace: 'nowrap', paddingInlineStart: '0' }}>
               {playerDisplay}
             </ul>
           </div>
@@ -137,7 +150,7 @@ class Board extends React.Component {
       if (this.props.playerID !== null) {
         for (let i = 0; i < this.props.G.playerDisplays[this.props.playerID].length; i++) {
           if (this.props.G.playerDisplays[this.props.playerID][i].subtype === 'Gambler') {
-            playerDisplay.push(<li className='card'><img className='cardImage' src={require('./images/' + this.props.G.playerDisplays[this.props.playerID][i].imageFilename)} onClick={() => this.props.moves.DrawCardGambling(true)} /></li>);
+            playerDisplay.push(<li className='card'><img className='cardImage' src={require('./images/' + this.props.G.playerDisplays[this.props.playerID][i].imageFilename)} onClick={() => this.props.moves.DrawCard(true)} /></li>);
           } else {
             playerDisplay.push(<li className='card'><img className='cardImage' src={require('./images/' + this.props.G.playerDisplays[this.props.playerID][i].imageFilename)} /></li>);
           }
@@ -160,7 +173,7 @@ class Board extends React.Component {
             &nbsp;<img style={{ height: '1em' }} src={require('./images/whole_saler.png')} />: {this.props.G.playerNumGreenWholeSalers[this.props.playerID] + this.props.G.playerNumBlueClerks[this.props.playerID] + this.props.G.playerNumRedClerks[this.props.playerID] + this.props.G.playerNumBlackClerks[this.props.playerID] + this.props.G.playerNumYellowClerks[this.props.playerID]},
             &nbsp;<img style={{ height: '1em' }} src={require('./images/gambler.png')} />: {this.props.G.playerNumGamblers[this.props.playerID]},
           </h1>
-          <ul style={{ overflow: 'auto', whiteSpace: 'nowrap' }}>
+          <ul style={{ overflow: 'auto', whiteSpace: 'nowrap', paddingInlineStart: '0' }}>
             {playerDisplay}
           </ul>
         </div>
@@ -171,6 +184,7 @@ class Board extends React.Component {
       <div>
         <div style={{ padding: '1em 1em 1em 1em', backgroundColor: '#990000' }} >
           <img style={{ height: '4em' }} src={require('./images/titlelogo.png')} />
+          <input type="button" value="continue" onClick={() => this.props.moves.EndStage()} />
         </div>
         <div className="board">
           {otherPlayerDisplays}
@@ -182,11 +196,14 @@ class Board extends React.Component {
               <div style={{ display: 'inline-block', verticalAlign: 'top' }}>
                 <h1>Draw Pile</h1>
                 <ul style={{ paddingInlineStart: '0' }}>
-                  <li className='card'><img className='cardImageSmall' src={require('./images/cardback.png')} onClick={() => this.props.moves.DrawCardGambling(false)} /></li>
+                  <li className='card'><img className='cardImageSmall' src={require('./images/cardback.png')} onClick={() => this.props.moves.DrawCard(false)} /></li>
                 </ul>
               </div>
               <div style={{ display: 'inline-block', paddingInlineStart: '2em', verticalAlign: 'top' }}>
                 <h1>Harbor Display</h1>
+                <ul style={{ display: 'inline', paddingInlineStart: '0' }}>
+                  {drawnTaxIncrease}
+                </ul>
                 <ul style={{ display: 'inline', paddingInlineStart: '0' }}>
                   {shipToRepel}
                 </ul>
