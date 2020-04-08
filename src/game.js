@@ -1,9 +1,7 @@
 import { PlayerView } from 'boardgame.io/core';
 import { INVALID_MOVE } from 'boardgame.io/core';
 
-// TODO: expedition (test if it is woring)
 // TODO: game board
-// TODO: skip turns automatically if nothing can be done
 // TODO: handle invalid moves: https://boardgame.io/documentation/#/immutability?id=invalid-moves
 
 function DbgShuffleDrawPile(G, ctx) {
@@ -29,7 +27,7 @@ function FulfillExpedition(G, ctx, cardIndex) {
     let settlerIndices = [];
     let jackOfAllTradesIndices = [];
 
-    for (let i = 0; i < G.playerDisplays[ctx.currentPlayer]; i++) {
+    for (let i = 0; i < G.playerDisplays[ctx.currentPlayer].length; i++) {
       if (G.playerDisplays[ctx.currentPlayer][i].subtype === 'Captain') {
         captainIndices.push(i);
       } else if (G.playerDisplays[ctx.currentPlayer][i].subtype === 'Priest') {
@@ -165,13 +163,18 @@ function FulfillExpedition(G, ctx, cardIndex) {
       }
     }
 
-    G.expeditionDisplay = G.expeditionDisplay.slice();
-    G.playerDisplays[ctx.currentPlayer] = G.playerDisplays[ctx.currentPlayer].concat(G.expeditionDisplay.splice(cardIndex, 1));
-    G.discardPile = G.discardPile.slice();
+    cardsToReplaceIndices.sort(function(a, b){return b-a});
+
     for (const index of cardsToReplaceIndices) {
-      G.discardPile.push(G.playerDisplays[ctx.currentPlayer].splice(index, 1));
-      G.playerCoins[ctx.currentPlayer]++;
+      G.playerVictoryPoints[ctx.currentPlayer] -= G.playerDisplays[ctx.currentPlayer][index].victoryPoints;
+      G.discardPile = G.discardPile.concat(G.playerDisplays[ctx.currentPlayer].splice(index, 1));
     }
+
+    G.expeditionDisplay = G.expeditionDisplay.slice();
+    let chosenExpedition = G.expeditionDisplay.splice(cardIndex, 1)[0];
+    G.playerVictoryPoints[ctx.currentPlayer] += chosenExpedition.victoryPoints;
+    G.playerCoins[ctx.currentPlayer] += chosenExpedition.coins;
+    G.playerDisplays[ctx.currentPlayer] = G.playerDisplays[ctx.currentPlayer].concat([ chosenExpedition ]);
   }
 }
 
@@ -450,7 +453,7 @@ function DrawCard(G, ctx, gambling) {
 
 function BeginTurn(G, ctx) {
   let turnmod = (ctx.turn - 1) % (ctx.numPlayers * (ctx.numPlayers + 1));
-  G.endTurnAutomatically[ctx.currentPlayer] = Array(ctx.numPlayers).fill(0);
+  G.endTurnAutomatically = Array(ctx.numPlayers).fill(0);
 
   // Count how many cards a player can draw
   G.drawCount = 1;
@@ -602,16 +605,15 @@ const PortRoyal = {
   setup: (ctx, setupData) => ({
     secret: {
       drawPile: ctx.random.Shuffle([
-        { type: 'Expedition', subtype: 'anchorCrossHouse', victoryPoints: 5, imageFilename: 'card_zoom-0.png', game: 'base' },
-        { type: 'Expedition', subtype: 'doubleAnchor', victoryPoints: 4, imageFilename: 'card_zoom-1.png', game: 'base' },
-        { type: 'Expedition', subtype: 'doubleCross', victoryPoints: 4, imageFilename: 'card_zoom-2.png', game: 'base' },
-        { type: 'Expedition', subtype: 'doubleHouse', victoryPoints: 4, imageFilename: 'card_zoom-3.png', game: 'base' },
-        { type: 'Expedition', subtype: 'doubleAnchorHouse', victoryPoints: 6, imageFilename: 'card_zoom-4.png', game: 'base' },
-        { type: 'Expedition', subtype: 'doubleCrossHouse', victoryPoints: 6, imageFilename: 'card_zoom-5.png', game: 'base' },
+        { type: 'Expedition', subtype: 'anchorCrossHouse', coins: 3, victoryPoints: 5, imageFilename: 'card_zoom-0.png', game: 'base' },
+        { type: 'Expedition', subtype: 'doubleAnchor', coins: 2, victoryPoints: 4, imageFilename: 'card_zoom-1.png', game: 'base' },
+        { type: 'Expedition', subtype: 'doubleCross', coins: 2, victoryPoints: 4, imageFilename: 'card_zoom-2.png', game: 'base' },
+        { type: 'Expedition', subtype: 'doubleHouse', coins: 2, victoryPoints: 4, imageFilename: 'card_zoom-3.png', game: 'base' },
+        { type: 'Expedition', subtype: 'doubleAnchorHouse', coins: 3, victoryPoints: 6, imageFilename: 'card_zoom-4.png', game: 'base' },
+        { type: 'Expedition', subtype: 'doubleCrossHouse', coins: 3, victoryPoints: 6, imageFilename: 'card_zoom-5.png', game: 'base' },
         { type: 'Person', subtype: 'Admiral', victoryPoints: 1, hireingCosts : 5, imageFilename: 'card_zoom-6.png', game: 'base' },
         { type: 'Person', subtype: 'Admiral', victoryPoints: 2, hireingCosts : 7, imageFilename: 'card_zoom-9.png', game: 'base' },
         { type: 'Person', subtype: 'Admiral', victoryPoints: 2, hireingCosts : 7, imageFilename: 'card_zoom-9.png', game: 'base' },
-/*
         { type: 'Person', subtype: 'Admiral', victoryPoints: 2, hireingCosts : 7, imageFilename: 'card_zoom-9.png', game: 'base' },
         { type: 'Person', subtype: 'Admiral', victoryPoints: 3, hireingCosts : 9, imageFilename: 'card_zoom-10.png', game: 'base' },
         { type: 'Person', subtype: 'Admiral', victoryPoints: 3, hireingCosts : 9, imageFilename: 'card_zoom-10.png', game: 'base' },
@@ -771,7 +773,6 @@ const PortRoyal = {
         { type: 'Person', subtype: 'Whole Saler', victoryPoints: 2, hireingCosts : 6, color: 'red', imageFilename: 'card_zoom-155.png', game: 'unterwegs' },
         { type: 'Person', subtype: 'Whole Saler', victoryPoints: 2, hireingCosts : 6, color: 'black', imageFilename: 'card_zoom-156.png', game: 'unterwegs' },
         { type: 'Person', subtype: 'Whole Saler', victoryPoints: 3, hireingCosts : 8, color: 'yellow', imageFilename: 'card_zoom-157.png', game: 'unterwegs' },
-*/
       ]),
     },
     activePlayer: 0,
