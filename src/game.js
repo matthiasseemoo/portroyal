@@ -436,6 +436,15 @@ function DrawCard(G, ctx, gambling) {
       G.drawnTaxIncrease = drawnCard;
       ctx.events.setStage('handleTaxIncrease');
     }
+
+    if (G.secret.drawPile.length === 0) {
+      if (G.discardPile.length > 0) {
+        G.secret.drawPile = ctx.random.Shuffle(G.discardPile);
+        G.discardPile = [];
+      } else {
+        ctx.events.endGame();
+      }
+    }
   }
 }
 
@@ -602,6 +611,7 @@ const PortRoyal = {
         { type: 'Person', subtype: 'Admiral', victoryPoints: 1, hireingCosts : 5, imageFilename: 'card_zoom-6.png', game: 'base' },
         { type: 'Person', subtype: 'Admiral', victoryPoints: 2, hireingCosts : 7, imageFilename: 'card_zoom-9.png', game: 'base' },
         { type: 'Person', subtype: 'Admiral', victoryPoints: 2, hireingCosts : 7, imageFilename: 'card_zoom-9.png', game: 'base' },
+/*
         { type: 'Person', subtype: 'Admiral', victoryPoints: 2, hireingCosts : 7, imageFilename: 'card_zoom-9.png', game: 'base' },
         { type: 'Person', subtype: 'Admiral', victoryPoints: 3, hireingCosts : 9, imageFilename: 'card_zoom-10.png', game: 'base' },
         { type: 'Person', subtype: 'Admiral', victoryPoints: 3, hireingCosts : 9, imageFilename: 'card_zoom-10.png', game: 'base' },
@@ -761,6 +771,7 @@ const PortRoyal = {
         { type: 'Person', subtype: 'Whole Saler', victoryPoints: 2, hireingCosts : 6, color: 'red', imageFilename: 'card_zoom-155.png', game: 'unterwegs' },
         { type: 'Person', subtype: 'Whole Saler', victoryPoints: 2, hireingCosts : 6, color: 'black', imageFilename: 'card_zoom-156.png', game: 'unterwegs' },
         { type: 'Person', subtype: 'Whole Saler', victoryPoints: 3, hireingCosts : 8, color: 'yellow', imageFilename: 'card_zoom-157.png', game: 'unterwegs' },
+*/
       ]),
     },
     activePlayer: 0,
