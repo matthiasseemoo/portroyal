@@ -4,6 +4,15 @@ import './board.css'
 import './font.css'
 
 class Board extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      displayExpedition: true,
+      displayDiscardPile: false,
+      displayPlayerId: 0,
+    };
+  }
+
   static propTypes = {
     G: PropTypes.any.isRequired,
     ctx: PropTypes.any.isRequired,
@@ -52,7 +61,7 @@ class Board extends React.Component {
       drawPileDisplay.push(
         <div>
           <h1>Draw Pile</h1>
-          <ul style={{ overflow: 'auto', whiteSpace: 'nowrap', paddingInlineStart: '0' }}>
+          <ul style={{ overflow: 'auto', whiteSpace: 'nowrap', paddingInlineStart: '0', height: '12em' }}>
             {drawPile}
           </ul>
         </div>
@@ -98,99 +107,117 @@ class Board extends React.Component {
       harborDisplayNonShips.push(<li className='card'><img onClick={() => this.hirePerson(i) } className='cardImage' src={require('./images/' + this.props.G.harborDisplayNonShips[i].imageFilename)} /></li>);
     }
 
-    let expeditionDisplay = [];
-    for (let i = 0; i < this.props.G.expeditionDisplay.length; i++) {
-      expeditionDisplay.push(<li className='card'><img onClick={() => this.fulfillExpedition(i) } className='cardImage' src={require('./images/' + this.props.G.expeditionDisplay[i].imageFilename)} /></li>);
-    }
-
     let discardPile = [];
     for (let i = 0; i < this.props.G.discardPile.length; i++) {
       discardPile.push(<li className='card'><img className='cardImage' src={require('./images/' + this.props.G.discardPile[i].imageFilename)} /></li>);
     }
 
-    let otherPlayerDisplays = [];
+    let playerList = [];
     for (let i = 0; i < this.props.ctx.numPlayers; i++) {
-      if (i !== parseInt(this.props.playerID)) {
-        let playerDisplay = [];
+      let cardDisplay = [];
+      if (this.state.displayPlayerId === i) {
+        let cardDisplayImgs = [];
         for (let j = 0; j < this.props.G.playerDisplays[i].length; j++) {
-          playerDisplay.push(
+          cardDisplayImgs.push(
             <li className='card'>
               <img className='cardImage' src={require('./images/' + this.props.G.playerDisplays[i][j].imageFilename)} />
             </li>
           );
         }
-        otherPlayerDisplays.push(
-          <div>
-            <h1>{(parseInt(this.props.ctx.currentPlayer) === i) ? <span>&#x1f449;</span> : ''} Player {i} {(parseInt(this.props.G.activePlayer) === i) ? <span>&#x1f34c;</span> : ''},
-              &nbsp;<img style={{ height: '1em' }} src={require('./images/points.png')} />: {this.props.G.playerVictoryPoints[i]},
-              &nbsp;<img style={{ height: '1em' }} src={require('./images/coin.png')} />: {this.props.G.playerCoins[i]},
-              &nbsp;<img style={{ height: '1em' }} src={require('./images/sword.png')} />: {this.props.G.playerSwords[i]},
-              &nbsp;<img style={{ height: '1em' }} src={require('./images/admiral.png')} />: {this.props.G.playerNumAdmirals[i]},
-              &nbsp;<img style={{ height: '1em' }} src={require('./images/jester.png')} />: {this.props.G.playerNumJesters[i]},
-              &nbsp;<img style={{ height: '1em' }} src={require('./images/mademoiselle.png')} />: {this.props.G.playerNumMademoiselles[i]},
-              &nbsp;<img style={{ height: '1em' }} src={require('./images/governor.png')} />: {this.props.G.playerNumGovenors[i]},
-              Traders: {this.props.G.playerNumGreenTraders[i] + this.props.G.playerNumBlueTraders[i] + this.props.G.playerNumRedTraders[i] + this.props.G.playerNumBlackTraders[i] + this.props.G.playerNumYellowTraders[i]},
-              &nbsp;<img style={{ height: '1em' }} src={require('./images/vice_admiral.png')} />: {this.props.G.playerNumViceAdmirals[i]},
-              &nbsp;<img style={{ height: '1em' }} src={require('./images/gunner.png')} />: {this.props.G.playerNumGunners[i]},
-              Clerks: {this.props.G.playerNumGreenClerks[i] + this.props.G.playerNumBlueClerks[i] + this.props.G.playerNumRedClerks[i] + this.props.G.playerNumBlackClerks[i] + this.props.G.playerNumYellowClerks[i]},
-              &nbsp;<img style={{ height: '1em' }} src={require('./images/whole_saler.png')} />: {this.props.G.playerNumGreenWholeSalers[i] + this.props.G.playerNumBlueWholeSalers[i] + this.props.G.playerNumRedWholeSalers[i] + this.props.G.playerNumBlackWholeSalers[i] + this.props.G.playerNumYellowWholeSalers[i]},
-              &nbsp;<img style={{ height: '1em' }} src={require('./images/gambler.png')} />: {this.props.G.playerNumGamblers[i]},
-            </h1>
-            <ul style={{ overflow: 'auto', whiteSpace: 'nowrap', paddingInlineStart: '0' }}>
-              {playerDisplay}
-            </ul>
-          </div>
+        cardDisplay.push(<ul style={{ overflow: 'auto', whiteSpace: 'nowrap', paddingInlineStart: '0', height: '12em' }}>{cardDisplayImgs}</ul>);
+      }
+      playerList.push(
+        <div>
+          <h1 onClick={() => this.setState({ displayPlayerId: i }) }>
+            {(parseInt(this.props.ctx.currentPlayer) === i) ? <span>&#x1f449;</span> : ''} Player {i} {(parseInt(this.props.G.activePlayer) === i) ? <span>&#x1f34c;</span> : ''},
+            &nbsp;<img style={{ height: '1em' }} title="Victory Points" alt="Victory Points" src={require('./images/points.png')} />: {this.props.G.playerVictoryPoints[i]},
+            &nbsp;<img style={{ height: '1em' }} title="Coins" alt="Coins" src={require('./images/coin.png')} />: {this.props.G.playerCoins[i]},
+            &nbsp;<img style={{ height: '1em' }} title="Swords" alt="Swords" src={require('./images/sword.png')} />: {this.props.G.playerSwords[i]},
+            &nbsp;<img style={{ height: '1em' }} title="Admirals" alt="Admirals" src={require('./images/admiral.png')} />: {this.props.G.playerNumAdmirals[i]},
+            &nbsp;<img style={{ height: '1em' }} title="Jesters" alt="Jesters" src={require('./images/jester.png')} />: {this.props.G.playerNumJesters[i]},
+            &nbsp;<img style={{ height: '1em' }} title="Mademoiselles" alt="Mademoiselles" src={require('./images/mademoiselle.png')} />: {this.props.G.playerNumMademoiselles[i]},
+            &nbsp;<img style={{ height: '1em' }} title="Governors" alt="Governors" src={require('./images/governor.png')} />: {this.props.G.playerNumGovenors[i]},
+            Traders: {this.props.G.playerNumGreenTraders[i] + this.props.G.playerNumBlueTraders[i] + this.props.G.playerNumRedTraders[i] + this.props.G.playerNumBlackTraders[i] + this.props.G.playerNumYellowTraders[i]},
+            &nbsp;<img style={{ height: '1em' }} title="Vice Admirals" alt="Vice Admirals" src={require('./images/vice_admiral.png')} />: {this.props.G.playerNumViceAdmirals[i]},
+            &nbsp;<img style={{ height: '1em' }} title="Gunners" alt="Gunners" src={require('./images/gunner.png')} />: {this.props.G.playerNumGunners[i]},
+            Clerks: {this.props.G.playerNumGreenClerks[i] + this.props.G.playerNumBlueClerks[i] + this.props.G.playerNumRedClerks[i] + this.props.G.playerNumBlackClerks[i] + this.props.G.playerNumYellowClerks[i]},
+            &nbsp;<img style={{ height: '1em' }} title="Whole Salers" alt="Whole Salers" src={require('./images/whole_saler.png')} />: {this.props.G.playerNumGreenWholeSalers[i] + this.props.G.playerNumBlueWholeSalers[i] + this.props.G.playerNumRedWholeSalers[i] + this.props.G.playerNumBlackWholeSalers[i] + this.props.G.playerNumYellowWholeSalers[i]},
+            &nbsp;<img style={{ height: '1em' }} title="Gamblers" alt="Gamblers" src={require('./images/gambler.png')} />: {this.props.G.playerNumGamblers[i]},
+          </h1>
+          {cardDisplay}
+        </div>
+      );
+    }
+    playerList.push(<h1 onClick={() => this.setState({ displayExpedition: !this.state.displayExpedition }) }>Expedition</h1>);
+    if (this.state.displayExpedition) {
+      let cardDisplayImgs = [];
+      for (let j = 0; j < this.props.G.expeditionDisplay.length; j++) {
+        cardDisplayImgs.push(
+          <li className='card'>
+            <img className='cardImage' src={require('./images/' + this.props.G.expeditionDisplay[j].imageFilename)} />
+          </li>
+        );
+      }
+      playerList.push(<ul style={{ overflow: 'auto', whiteSpace: 'nowrap', paddingInlineStart: '0', height: '12em' }}>{cardDisplayImgs}</ul>);
+    }
+    playerList.push(<h1 onClick={() => this.setState({ displayDiscardPile: !this.state.displayDiscardPile }) }>Discard Pile</h1>);
+    if (this.state.displayDiscardPile) {
+      let cardDisplayImgs = [];
+      for (let j = 0; j < this.props.G.discardPile.length; j++) {
+        cardDisplayImgs.push(
+          <li className='card'>
+            <img className='cardImage' src={require('./images/' + this.props.G.discardPile[j].imageFilename)} />
+          </li>
+        );
+      }
+      playerList.push(<ul style={{ overflow: 'auto', whiteSpace: 'nowrap', paddingInlineStart: '0', height: '12em' }}>{cardDisplayImgs}</ul>);
+    }
+
+/*
+    let cardDisplay = [];
+    if (this.state.selectedCardDisplay === "Player") {
+      
+    } else if (this.state.selectedCardDisplay === "Expedition") {
+      for (let i = 0; i < this.props.G.expeditionDisplay.length; i++) {
+        cardDisplay.push(
+          <li className='card'>
+            <img onClick={() => this.fulfillExpedition(i) } className='cardImage' src={require('./images/' + this.props.G.expeditionDisplay[i].imageFilename)} />
+          </li>
+        );
+      }
+    } else if (this.state.selectedCardDisplay === "DiscardPile") {
+      for (let i = 0; i < this.props.G.discardPile.length; i++) {
+        cardDisplay.push(
+          <li className='card'>
+            <img onClick={() => this.fulfillExpedition(i) } className='cardImage' src={require('./images/' + this.props.G.discardPile[i].imageFilename)} />
+          </li>
         );
       }
     }
 
-    let activePlayerDisplay = [];
-    if (this.props.playerID !== null) {
-      let playerDisplay = [];
-      if (this.props.playerID !== null) {
-        for (let i = 0; i < this.props.G.playerDisplays[this.props.playerID].length; i++) {
-          if (this.props.G.playerDisplays[this.props.playerID][i].subtype === 'Gambler') {
-            playerDisplay.push(<li className='card'><img className='cardImage' src={require('./images/' + this.props.G.playerDisplays[this.props.playerID][i].imageFilename)} onClick={() => this.props.moves.DrawCard(true)} /></li>);
-          } else {
-            playerDisplay.push(<li className='card'><img className='cardImage' src={require('./images/' + this.props.G.playerDisplays[this.props.playerID][i].imageFilename)} /></li>);
-          }
-        }
-      }
-      activePlayerDisplay.push(
-        <div>
-          <h1>{(this.props.ctx.currentPlayer === this.props.playerID) ? <span>&#x1f449;</span> : ''} Player {this.props.playerID} {(this.props.G.activePlayer === this.props.playerID) ? <span>&#x1f34c;</span> : ''},
-            &nbsp;<img style={{ height: '1em' }} src={require('./images/points.png')} />: {this.props.G.playerVictoryPoints[this.props.playerID]}, 
-            &nbsp;<img style={{ height: '1em' }} src={require('./images/coin.png')} />: {this.props.G.playerCoins[this.props.playerID]},
-            &nbsp;<img style={{ height: '1em' }} src={require('./images/sword.png')} />: {this.props.G.playerSwords[this.props.playerID]},
-            &nbsp;<img style={{ height: '1em' }} src={require('./images/admiral.png')} />: {this.props.G.playerNumAdmirals[this.props.playerID]},
-            &nbsp;<img style={{ height: '1em' }} src={require('./images/jester.png')} />: {this.props.G.playerNumJesters[this.props.playerID]},
-            &nbsp;<img style={{ height: '1em' }} src={require('./images/mademoiselle.png')} />: {this.props.G.playerNumMademoiselles[this.props.playerID]},
-            &nbsp;<img style={{ height: '1em' }} src={require('./images/governor.png')} />: {this.props.G.playerNumGovenors[this.props.playerID]},
-            Traders: {this.props.G.playerNumGreenTraders[this.props.playerID] + this.props.G.playerNumBlueTraders[this.props.playerID] + this.props.G.playerNumRedTraders[this.props.playerID] + this.props.G.playerNumBlackTraders[this.props.playerID] + this.props.G.playerNumYellowTraders[this.props.playerID]},
-            &nbsp;<img style={{ height: '1em' }} src={require('./images/vice_admiral.png')} />: {this.props.G.playerNumViceAdmirals[this.props.playerID]},
-            &nbsp;<img style={{ height: '1em' }} src={require('./images/gunner.png')} />: {this.props.G.playerNumGunners[this.props.playerID]},
-            Clerks: {this.props.G.playerNumGreenClerks[this.props.playerID] + this.props.G.playerNumBlueWholeSalers[this.props.playerID] + this.props.G.playerNumRedWholeSalers[this.props.playerID] + this.props.G.playerNumBlackWholeSalers[this.props.playerID] + this.props.G.playerNumYellowWholeSalers[this.props.playerID]},
-            &nbsp;<img style={{ height: '1em' }} src={require('./images/whole_saler.png')} />: {this.props.G.playerNumGreenWholeSalers[this.props.playerID] + this.props.G.playerNumBlueClerks[this.props.playerID] + this.props.G.playerNumRedClerks[this.props.playerID] + this.props.G.playerNumBlackClerks[this.props.playerID] + this.props.G.playerNumYellowClerks[this.props.playerID]},
-            &nbsp;<img style={{ height: '1em' }} src={require('./images/gambler.png')} />: {this.props.G.playerNumGamblers[this.props.playerID]},
-          </h1>
-          <ul style={{ overflow: 'auto', whiteSpace: 'nowrap', paddingInlineStart: '0' }}>
-            {playerDisplay}
-          </ul>
-        </div>
-      );
-    }
+    let otherPlayerDisplays = [];
+    otherPlayerDisplays.push(
+      <div>
+        {playerList}
+        <ul style={{ display: 'inline', paddingInlineStart: '0' }}>
+          {cardDisplay}
+        </ul>
+      </div>
+    );
+*/
 
     return (
       <div>
         <div style={{ padding: '1em 1em 1em 1em', backgroundColor: '#990000' }} >
           <img style={{ height: '4em' }} src={require('./images/titlelogo.png')} />
           <div>
+            You are: Player {this.props.playerID}&nbsp;
             Currently in: { (this.props.ctx.activePlayers !== null) ? this.props.ctx.activePlayers[this.props.playerID] : '' }&nbsp;
             <input type="button" value="continue" onClick={() => this.props.moves.EndStage()} />
           </div>
         </div>
         <div className="board">
-          {otherPlayerDisplays}
+          {playerList}
 
           {drawPileDisplay}
 
@@ -204,37 +231,21 @@ class Board extends React.Component {
               </div>
               <div style={{ display: 'inline-block', paddingInlineStart: '2em', verticalAlign: 'top' }}>
                 <h1>Harbor Display</h1>
-                <ul style={{ display: 'inline', paddingInlineStart: '0' }}>
+                <ul style={{ display: 'inline', paddingInlineStart: '0', height: '12em' }}>
                   {drawnTaxIncrease}
                 </ul>
-                <ul style={{ display: 'inline', paddingInlineStart: '0' }}>
+                <ul style={{ display: 'inline', paddingInlineStart: '0', height: '12em' }}>
                   {shipToRepel}
                 </ul>
-                <ul style={{ display: 'inline', paddingInlineStart: '0' }}>
+                <ul style={{ display: 'inline', paddingInlineStart: '0', height: '12em' }}>
                   {harborDisplayShips}
                 </ul>
-                <ul style={{ display: 'inline', paddingInlineStart: '0' }}>
+                <ul style={{ display: 'inline', paddingInlineStart: '0', height: '12em' }}>
                   {harborDisplayNonShips}
                 </ul>
               </div>
             </div>
           </div>
-          <div style={{ overflow: 'auto', whiteSpace: 'nowrap' }}>
-            <div style={{ display: 'inline-block', verticalAlign: 'top' }}>
-              <h1>Expeditions</h1>
-              <ul style={{ paddingInlineStart: '0' }}>
-                {expeditionDisplay}
-              </ul>
-            </div>
-            <div style={{ display: 'inline-block', paddingInlineStart: '2em', verticalAlign: 'top' }}>
-              <h1>Discard Pile</h1>
-              <ul style={{ paddingInlineStart: '0' }}>
-                {discardPile}
-              </ul>
-            </div>
-          </div>
-          
-          {activePlayerDisplay}
         </div>
       </div>
     );
