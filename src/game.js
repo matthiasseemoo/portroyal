@@ -167,14 +167,14 @@ function FulfillExpedition(G, ctx, cardIndex) {
 
     for (const index of cardsToReplaceIndices) {
       G.playerVictoryPoints[ctx.currentPlayer] -= G.playerDisplays[ctx.currentPlayer][index].victoryPoints;
-      G.discardPile = G.discardPile.concat(G.playerDisplays[ctx.currentPlayer].splice(index, 1));
+      G.discardPile = G.playerDisplays[ctx.currentPlayer].splice(index, 1).concat(G.discardPile);
     }
 
     G.expeditionDisplay = G.expeditionDisplay.slice();
     let chosenExpedition = G.expeditionDisplay.splice(cardIndex, 1)[0];
     G.playerVictoryPoints[ctx.currentPlayer] += chosenExpedition.victoryPoints;
     G.playerCoins[ctx.currentPlayer] += chosenExpedition.coins;
-    G.playerDisplays[ctx.currentPlayer] = G.playerDisplays[ctx.currentPlayer].concat([ chosenExpedition ]);
+    G.playerDisplays[ctx.currentPlayer] = [ chosenExpedition ].concat(G.playerDisplays[ctx.currentPlayer]);
   }
 }
 
@@ -225,7 +225,7 @@ function TradeShip(G, ctx, cardIndex, playerId) {
     }
     
     // Add Ship to discard pile
-    G.discardPile = G.discardPile.concat([ tradedShip ]);
+    G.discardPile = [ tradedShip ].concat(G.discardPile);
 
     // Remove ship from harbor display
     G.harborDisplayShips = G.harborDisplayShips.slice();
@@ -256,7 +256,7 @@ function HirePerson(G, ctx, cardIndex) {
 
       // Add hired person to player display
       G.playerDisplays = G.playerDisplays.slice();
-      G.playerDisplays[ctx.currentPlayer] = G.playerDisplays[ctx.currentPlayer].concat([ hiredPerson ]);
+      G.playerDisplays[ctx.currentPlayer] = [ hiredPerson ].concat(G.playerDisplays[ctx.currentPlayer]);
 
       // Increase player's Victory Points
       G.playerVictoryPoints[ctx.currentPlayer] += hiredPerson.victoryPoints;
@@ -369,7 +369,7 @@ function RepelShip(G, ctx, doRepel) {
   G.shipToRepel = null;
 
   if (doRepel === true || doRepel === 1) {
-    G.discardPile = G.discardPile.concat([drawnCard]);
+    G.discardPile = [drawnCard].concat(G.discardPile);
     ctx.events.setStage('discover');
   } else {
     let discardHarborDisplay = false;
@@ -381,7 +381,7 @@ function RepelShip(G, ctx, doRepel) {
       }
     }
 
-    G.harborDisplayShips  = G.harborDisplayShips.concat([drawnCard]);
+    G.harborDisplayShips = [drawnCard].concat(G.harborDisplayShips);
     if (discardHarborDisplay) {
       ctx.events.setStage('discoverFailed');
     } else {
@@ -414,9 +414,9 @@ function DrawCard(G, ctx, gambling) {
     G.secret.drawPile = G.secret.drawPile.slice(1);
 
     if (drawnCard.type === 'Expedition') {
-      G.expeditionDisplay = G.expeditionDisplay.concat([drawnCard]);
+      G.expeditionDisplay = [drawnCard].concat(G.expeditionDisplay);
     } else if (drawnCard.type === 'Person') {
-      G.harborDisplayNonShips = G.harborDisplayNonShips.concat([drawnCard]);
+      G.harborDisplayNonShips = [drawnCard].concat(G.harborDisplayNonShips);
     } else if (drawnCard.type === 'Ship') {
       // ships can only be repelled before the gambler is played
       if ((G.gambleCount === 0) && (drawnCard.swords <= G.playerSwords[ctx.currentPlayer])) {
@@ -430,7 +430,7 @@ function DrawCard(G, ctx, gambling) {
           }
         }
 
-        G.harborDisplayShips  = G.harborDisplayShips.concat([drawnCard]);
+        G.harborDisplayShips = [drawnCard].concat(G.harborDisplayShips);
         // only discard cards if we have drawn the last card that had to be drawn
         if (discardHarborDisplay && (d === (drawAmount - 1))) {
           ctx.events.setStage('discoverFailed');
@@ -469,9 +469,9 @@ function BeginTurn(G, ctx) {
     ctx.events.setStage('discover');
   } else if (turnmod === ctx.currentPlayer * (1 + ctx.numPlayers) + ctx.numPlayers) {
     // Discard harbor display cards and end turn
-    G.discardPile = G.discardPile.concat(G.harborDisplayNonShips);
+    G.discardPile = G.harborDisplayNonShips.concat(G.discardPile);
     G.harborDisplayNonShips = [];
-    G.discardPile = G.discardPile.concat(G.harborDisplayShips);
+    G.discardPile = G.harborDisplayShips.concat(G.discardPile);
     G.harborDisplayShips = [];
     // A periodic task in the client will check for this value to decide whether to end a turn automatically
     G.endTurnAutomatically[ctx.currentPlayer] = true;
@@ -540,9 +540,9 @@ function EndStage(G, ctx) {
     }
     ctx.events.setStage('tradeAndHire');
   } else if (currentStage === 'discoverFailed') {
-    G.discardPile = G.discardPile.concat(G.harborDisplayNonShips);
+    G.discardPile = G.harborDisplayNonShips.concat(G.discardPile);
     G.harborDisplayNonShips = [];
-    G.discardPile = G.discardPile.concat(G.harborDisplayShips);
+    G.discardPile = G.harborDisplayShips.concat(G.discardPile);
     G.harborDisplayShips = [];
     // Get one coin for each Jester
     if (G.playerNumJesters > 0) {
@@ -589,7 +589,7 @@ function EndStage(G, ctx) {
 
     G.playerCoins = newPlayerCoins;
 
-    G.discardPile = G.discardPile.concat([G.drawnTaxIncrease]);
+    G.discardPile = [G.drawnTaxIncrease].concat(G.discardPile);
     G.drawnTaxIncrease = null;
     // return to discovery
     ctx.events.endStage();
