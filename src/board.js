@@ -30,26 +30,25 @@ function CardDisplayWithHeader(props) {
     if (props.displayCards) {
       return (
         <div>
-          <h1 onClick={props.onClick}>{props.children}</h1>
+          <h1 onClick={props.onClick} style={{cursor: 'pointer'}}>{props.children}</h1>
           <CardDisplay cards={props.cards} overflow={props.overflow} onClick={props.cardsOnClick} />
         </div>
       );
     } else {
       return (
         <div>
-          <h1 onClick={props.onClick}>{props.children}</h1>
+          <h1 onClick={props.onClick} style={{cursor: 'pointer'}}>{props.children}</h1>
         </div>
       );
     }  
   } else {
-    return (<div></div>);
+    return null;
   }
-
 }
 CardDisplayWithHeader.defaultProps = {
   overflow: 'visible',
-  displayCards: 'true',
-  displayComponent: 'true',
+  displayCards: true,
+  displayComponent: true,
 };
 
 class Board extends React.Component {
