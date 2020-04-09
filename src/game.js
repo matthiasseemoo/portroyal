@@ -401,6 +401,7 @@ function DrawCard(G, ctx, gambling) {
     if (G.gambleCount < G.playerNumGamblers[ctx.currentPlayer]) {
       drawAmount = 4;
       G.gambleCount++;
+      G.drawCount++;
     } else {
       // not enough Gamblers to gamble again
       return INVALID_MOVE;

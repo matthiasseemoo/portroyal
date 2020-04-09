@@ -3,6 +3,55 @@ import PropTypes from 'prop-types';
 import './board.css'
 import './font.css'
 
+function Card(props) {
+  return (
+    <li className='card'>
+      <img onClick={props.onClick} className='cardImage' src={require('./images/' + props.ship.imageFilename)} />
+    </li>
+  );
+}
+
+function CardDisplay(props) {
+  let cardList = [];
+  
+  for (let i = 0; i < props.cards.length; i++) {
+    cardList.push(<Card ship={props.cards[i]} onClick={ () => props.onClick(i) } />);
+  }
+
+  return (
+    <ul style={{ overflow: props.overflow, whiteSpace: 'nowrap', paddingInlineStart: '0', height: '12em' }}>
+      {cardList}
+    </ul>
+  );
+}
+
+function CardDisplayWithHeader(props) {
+  if (props.displayComponent) {
+    if (props.displayCards) {
+      return (
+        <div>
+          <h1 onClick={props.onClick}>{props.children}</h1>
+          <CardDisplay cards={props.cards} overflow={props.overflow} onClick={props.cardsOnClick} />
+        </div>
+      );
+    } else {
+      return (
+        <div>
+          <h1 onClick={props.onClick}>{props.children}</h1>
+        </div>
+      );
+    }  
+  } else {
+    return (<div></div>);
+  }
+
+}
+CardDisplayWithHeader.defaultProps = {
+  overflow: 'visible',
+  displayCards: 'true',
+  displayComponent: 'true',
+};
+
 class Board extends React.Component {
   constructor(props) {
     super(props);
@@ -50,23 +99,14 @@ class Board extends React.Component {
     this.props.moves.HirePerson(cardIndex);
   }
 
-  render() {
-
-    let drawPileDisplay = [];
-    if (this.props.G.secret !== undefined) {
-      let drawPile = [];
-      for (let i = 0; i < this.props.G.secret.drawPile.length; i++) {
-        drawPile.push(<li className='card'><img className='cardImage' src={require('./images/' + this.props.G.secret.drawPile[i].imageFilename)} /></li>);
-      }
-      drawPileDisplay.push(
-        <div>
-          <h1>Draw Pile</h1>
-          <ul style={{ overflow: 'auto', whiteSpace: 'nowrap', paddingInlineStart: '0', height: '12em' }}>
-            {drawPile}
-          </ul>
-        </div>
-      );
+  handlePlayerCardClick(card) {
+    if (card.subtype === 'Gambler') {
+      // Gamble: draw four cards at once
+      this.props.moves.DrawCard(true);
     }
+  }
+
+  render() {
 
     let shipToRepel = [];
     if (this.props.G.shipToRepel !== null) {
@@ -114,21 +154,9 @@ class Board extends React.Component {
 
     let playerList = [];
     for (let i = 0; i < this.props.ctx.numPlayers; i++) {
-      let cardDisplay = [];
-      if (this.state.displayPlayerId === i) {
-        let cardDisplayImgs = [];
-        for (let j = 0; j < this.props.G.playerDisplays[i].length; j++) {
-          cardDisplayImgs.push(
-            <li className='card'>
-              <img className='cardImage' src={require('./images/' + this.props.G.playerDisplays[i][j].imageFilename)} />
-            </li>
-          );
-        }
-        cardDisplay.push(<ul style={{ overflow: 'auto', whiteSpace: 'nowrap', paddingInlineStart: '0', height: '12em' }}>{cardDisplayImgs}</ul>);
-      }
       playerList.push(
         <div>
-          <h1 onClick={() => this.setState({ displayPlayerId: i }) }>
+          <CardDisplayWithHeader cards={this.props.G.playerDisplays[i]} onClick={() => this.setState({ displayPlayerId: i }) } cardsOnClick={(cardIdx) => this.handlePlayerCardClick(this.props.G.playerDisplays[i][cardIdx])} overflow="auto" displayCards={this.state.displayPlayerId === i}>
             {(parseInt(this.props.ctx.currentPlayer) === i) ? <span>&#x1f449;</span> : ''} Player {i} {(parseInt(this.props.G.activePlayer) === i) ? <span>&#x1f34c;</span> : ''},
             &nbsp;<img style={{ height: '1em' }} title="Victory Points" alt="Victory Points" src={require('./images/points.png')} />: {this.props.G.playerVictoryPoints[i]},
             &nbsp;<img style={{ height: '1em' }} title="Coins" alt="Coins" src={require('./images/coin.png')} />: {this.props.G.playerCoins[i]},
@@ -143,68 +171,10 @@ class Board extends React.Component {
             Clerks: {this.props.G.playerNumGreenClerks[i] + this.props.G.playerNumBlueClerks[i] + this.props.G.playerNumRedClerks[i] + this.props.G.playerNumBlackClerks[i] + this.props.G.playerNumYellowClerks[i]},
             &nbsp;<img style={{ height: '1em' }} title="Whole Salers" alt="Whole Salers" src={require('./images/whole_saler.png')} />: {this.props.G.playerNumGreenWholeSalers[i] + this.props.G.playerNumBlueWholeSalers[i] + this.props.G.playerNumRedWholeSalers[i] + this.props.G.playerNumBlackWholeSalers[i] + this.props.G.playerNumYellowWholeSalers[i]},
             &nbsp;<img style={{ height: '1em' }} title="Gamblers" alt="Gamblers" src={require('./images/gambler.png')} />: {this.props.G.playerNumGamblers[i]},
-          </h1>
-          {cardDisplay}
+          </CardDisplayWithHeader>
         </div>
       );
     }
-    playerList.push(<h1 onClick={() => this.setState({ displayExpedition: !this.state.displayExpedition }) }>Expedition</h1>);
-    if (this.state.displayExpedition) {
-      let cardDisplayImgs = [];
-      for (let j = 0; j < this.props.G.expeditionDisplay.length; j++) {
-        cardDisplayImgs.push(
-          <li className='card'>
-            <img className='cardImage' src={require('./images/' + this.props.G.expeditionDisplay[j].imageFilename)} />
-          </li>
-        );
-      }
-      playerList.push(<ul style={{ overflow: 'auto', whiteSpace: 'nowrap', paddingInlineStart: '0', height: '12em' }}>{cardDisplayImgs}</ul>);
-    }
-    playerList.push(<h1 onClick={() => this.setState({ displayDiscardPile: !this.state.displayDiscardPile }) }>Discard Pile</h1>);
-    if (this.state.displayDiscardPile) {
-      let cardDisplayImgs = [];
-      for (let j = 0; j < this.props.G.discardPile.length; j++) {
-        cardDisplayImgs.push(
-          <li className='card'>
-            <img className='cardImage' src={require('./images/' + this.props.G.discardPile[j].imageFilename)} />
-          </li>
-        );
-      }
-      playerList.push(<ul style={{ overflow: 'auto', whiteSpace: 'nowrap', paddingInlineStart: '0', height: '12em' }}>{cardDisplayImgs}</ul>);
-    }
-
-/*
-    let cardDisplay = [];
-    if (this.state.selectedCardDisplay === "Player") {
-      
-    } else if (this.state.selectedCardDisplay === "Expedition") {
-      for (let i = 0; i < this.props.G.expeditionDisplay.length; i++) {
-        cardDisplay.push(
-          <li className='card'>
-            <img onClick={() => this.fulfillExpedition(i) } className='cardImage' src={require('./images/' + this.props.G.expeditionDisplay[i].imageFilename)} />
-          </li>
-        );
-      }
-    } else if (this.state.selectedCardDisplay === "DiscardPile") {
-      for (let i = 0; i < this.props.G.discardPile.length; i++) {
-        cardDisplay.push(
-          <li className='card'>
-            <img onClick={() => this.fulfillExpedition(i) } className='cardImage' src={require('./images/' + this.props.G.discardPile[i].imageFilename)} />
-          </li>
-        );
-      }
-    }
-
-    let otherPlayerDisplays = [];
-    otherPlayerDisplays.push(
-      <div>
-        {playerList}
-        <ul style={{ display: 'inline', paddingInlineStart: '0' }}>
-          {cardDisplay}
-        </ul>
-      </div>
-    );
-*/
 
     return (
       <div>
@@ -219,7 +189,9 @@ class Board extends React.Component {
         <div className="board">
           {playerList}
 
-          {drawPileDisplay}
+          <CardDisplayWithHeader cards={this.props.G.expeditionDisplay} onClick={() => this.setState({ displayExpedition: !this.state.displayExpedition })} overflow='auto' displayCards={this.state.displayExpedition}>Expeditions</CardDisplayWithHeader>
+          <CardDisplayWithHeader cards={this.props.G.discardPile} onClick={() => this.setState({ displayDiscardPile: !this.state.displayDiscardPile })} overflow='auto' displayCards={this.state.displayDiscardPile}>Discard Pile</CardDisplayWithHeader>
+          <CardDisplayWithHeader cards={this.props.G.secret.drawPile} overflow="auto" displayComponent={this.props.G.secret !== undefined}>Draw Pile</CardDisplayWithHeader>
 
           <div>
             <div style={{ overflow: 'auto', whiteSpace: 'nowrap' }}>
