@@ -4,14 +4,12 @@ import { INVALID_MOVE } from 'boardgame.io/core';
 // TODO: board: show number of draws
 // TODO: board: click on tax increase or draw pile
 // TODO: whole saler: indicate additional victory points
-//  TODO: game: sort cards in displays
-//  TODO: game: check for possible expeditions before automatically continuing
 // TODO: bugfix: gamler can continue even though two same colored ships are open
 // TODO: board: indicate when expedition was drawn
 // TODO: board/game: show when extra money will be available
 // TODO: game: deactivate debug functions
 // TODO: bugfix: jester does not work when someone else fails
-// TODO: board: show cards left in draw pile
+// TODO: bugfix: gambler + 4 colored ships only allows to draw two cards
 // TODO: handle invalid moves: https://boardgame.io/documentation/#/immutability?id=invalid-moves
 
 function DbgShuffleDrawPile(G, ctx) {
@@ -189,19 +187,14 @@ function FulfillExpedition(G, ctx, cardIndex) {
 
   if (cardsToReplaceIndices !== INVALID_MOVE) {
     for (const index of cardsToReplaceIndices) {
-      switch (G.playerDisplays[ctx.currentPlayer][index]) {
-        case 'Captain':
-          G.playerNumCaptains[ctx.currentPlayer]--;
-          break;
-        case 'Priest':
-          G.playerNumPriests[ctx.currentPlayer]--;
-          break;
-        case 'Settler':
-          G.playerNumSettlers[ctx.currentPlayer]--;
-          break;
-        case 'JackOfAllTrades':
-          G.playerNumJackOfAllTrades[ctx.currentPlayer]--;
-          break;
+      if (G.playerDisplays[ctx.currentPlayer][index] === 'Captain') {
+        G.playerNumCaptains[ctx.currentPlayer]--;
+      } else if (G.playerDisplays[ctx.currentPlayer][index] === 'Priest') {
+        G.playerNumPriests[ctx.currentPlayer]--;
+      } else if (G.playerDisplays[ctx.currentPlayer][index] === 'Settler') {
+        G.playerNumSettlers[ctx.currentPlayer]--;
+      } else if (G.playerDisplays[ctx.currentPlayer][index] === 'JackOfAllTrades') {
+        G.playerNumJackOfAllTrades[ctx.currentPlayer]--;
       }
       G.playerVictoryPoints[ctx.currentPlayer] -= G.playerDisplays[ctx.currentPlayer][index].victoryPoints;
       G.discardPile = G.playerDisplays[ctx.currentPlayer].splice(index, 1).concat(G.discardPile);
@@ -476,6 +469,49 @@ function RepelShip(G, ctx, doRepel) {
   }
 }
 
+function handleTaxIncreaseDirectly(G, ctx) {
+  let minVictoryPoints = Infinity;
+  let maxSwords = 0;
+
+  let newPlayerCoins = G.playerCoins.slice();
+
+  // Count min. victory points and max. swords and remove coins from players with more than or equal to 12 coins
+  for (let i = 0; i < ctx.numPlayers; i++) {
+    if (G.playerVictoryPoints[i] < minVictoryPoints) {
+      minVictoryPoints = G.playerVictoryPoints[i];
+    }
+
+    if (G.playerSwords[i] > maxSwords) {
+      maxSwords = G.playerSwords[i];
+    }
+
+    if (G.playerCoins[i] >= 12) {
+      newPlayerCoins[i] = Math.round(G.playerCoins[i] / 2);
+    }
+  }
+
+  if (G.drawnTaxIncrease.subtype === 'minVictoryPoints') {
+    for (let i = 0; i < ctx.numPlayers; i++) {
+      if (G.playerVictoryPoints[i] === minVictoryPoints) {
+        newPlayerCoins[i]++;
+      }
+    }
+  }
+
+  if (G.drawnTaxIncrease.subtype === 'maxSwords') {
+    for (let i = 0; i < ctx.numPlayers; i++) {
+      if (G.playerSwords[i] === maxSwords) {
+        newPlayerCoins[i]++;
+      }
+    }
+  }
+
+  G.playerCoins = newPlayerCoins;
+
+  G.discardPile = [G.drawnTaxIncrease].concat(G.discardPile);
+  G.drawnTaxIncrease = null;
+}
+
 function DrawCard(G, ctx, gambling) {
   if ((G.gambleCount > 0) && !((gambling === true) || (gambling === 1))) {
     // only gambling is allowed
@@ -498,6 +534,7 @@ function DrawCard(G, ctx, gambling) {
   for (let d = 0; d < drawAmount; d++) {
     let drawnCard = G.secret.drawPile.slice(0,1)[0];
     G.secret.drawPile = G.secret.drawPile.slice(1);
+    G.drawPileLength = G.secret.drawPile.length;
 
     if (drawnCard.type === 'Expedition') {
       G.expeditionDisplay = [drawnCard].concat(G.expeditionDisplay);
@@ -525,7 +562,12 @@ function DrawCard(G, ctx, gambling) {
       }
     } else if (drawnCard.type === 'TaxIncrease') {
       G.drawnTaxIncrease = drawnCard;
-      ctx.events.setStage('handleTaxIncrease');
+      if (G.gambleCount === 0) {
+        // if we are not gambling, handle tax increase normally
+        ctx.events.setStage('handleTaxIncrease');
+      } else {
+        handleTaxIncreaseDirectly(G, ctx);
+      }
     }
 
     if (G.secret.drawPile.length === 0) {
@@ -537,11 +579,19 @@ function DrawCard(G, ctx, gambling) {
       }
     }
   }
+
+  // directly continue to trade and hire if player was gambling and no more gambling is possible
+  if ((gambling === true) || (gambling === 1)) {
+    if (G.gambleCount === G.playerNumGamblers[ctx.currentPlayer] && !discardHarborDisplay) {
+      ctx.events.setStage('tradeAndHire');
+    }
+  }
 }
 
 function BeginTurn(G, ctx) {
   let turnmod = (ctx.turn - 1) % (ctx.numPlayers * (ctx.numPlayers + 1));
   G.endTurnAutomatically = Array(ctx.numPlayers).fill(0);
+  G.drawPileLength = G.secret.drawPile.length;
 
   // Count how many cards a player can draw
   G.drawCount = 1;
@@ -638,46 +688,7 @@ function EndStage(G, ctx) {
     }
     ctx.events.endTurn();
   } else if (currentStage === 'handleTaxIncrease') {
-    let minVictoryPoints = Infinity;
-    let maxSwords = 0;
-
-    let newPlayerCoins = G.playerCoins.slice();
-
-    // Count min. victory points and max. swords and remove cards from players with more than or equal to 12 cards
-    for (let i = 0; i < ctx.numPlayers; i++) {
-      if (G.playerVictoryPoints[i] < minVictoryPoints) {
-        minVictoryPoints = G.playerVictoryPoints[i];
-      }
-
-      if (G.playerSwords[i] > maxSwords) {
-        maxSwords = G.playerSwords[i];
-      }
-
-      if (G.playerCoins[i] >= 12) {
-        newPlayerCoins[i] = Math.round(G.playerCoins[i] / 2);
-      }
-    }
-
-    if (G.drawnTaxIncrease.subtype === 'minVictoryPoints') {
-      for (let i = 0; i < ctx.numPlayers; i++) {
-        if (G.playerVictoryPoints[i] === minVictoryPoints) {
-          newPlayerCoins[i]++;
-        }
-      }
-    }
-
-    if (G.drawnTaxIncrease.subtype === 'maxSwords') {
-      for (let i = 0; i < ctx.numPlayers; i++) {
-        if (G.playerSwords[i] === maxSwords) {
-          newPlayerCoins[i]++;
-        }
-      }
-    }
-
-    G.playerCoins = newPlayerCoins;
-
-    G.discardPile = [G.drawnTaxIncrease].concat(G.discardPile);
-    G.drawnTaxIncrease = null;
+    handleTaxIncreaseDirectly(G, ctx);
     // return to discovery
     ctx.events.endStage();
   } else if (currentStage === 'repelShip') {
@@ -897,6 +908,7 @@ const PortRoyal = {
         { type: 'Person', subtype: 'Whole Saler', victoryPoints: 3, hireingCosts : 8, color: 'yellow', imageFilename: 'card_zoom-157.png', game: 'unterwegs' },
       ]),
     },
+    drawPileLength: 0,
     activePlayer: 0,
     drawCount: 0,
     gambleCount: 0,

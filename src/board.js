@@ -147,7 +147,7 @@ class Board extends React.Component {
       playerList.push(
         <div>
           <CardDisplayWithHeader cards={this.props.G.playerDisplays[i]} onClick={() => this.setState({ displayPlayerId: i }) } cardsOnClick={(cardIdx) => this.handlePlayerCardClick(this.props.G.playerDisplays[i][cardIdx])} overflow="auto" displayCards={this.state.displayPlayerId === i}>
-            {(this.props.ctx.gameover) ? '' : ((parseInt(this.props.ctx.currentPlayer) === i) ? <span>&#x1f449;</span> : '')} Player {i} {(this.props.ctx.gameover) ? ((this.props.ctx.gameover.winners.includes(i)) ? <span>&#x1f3c6;</span> : '') : ((parseInt(this.props.G.activePlayer) === i) ? <span>&#x1f34c;</span> : '')},
+            {(this.props.ctx.gameover) ? '' : ((parseInt(this.props.ctx.currentPlayer) === i) ? <span>&#x1f449;</span> : '')} Player {i} {(this.props.ctx.gameover) ? ((this.props.ctx.gameover.winners.includes(i)) ? <span>&#x1f3c6;</span> : '') : <span>{((parseInt(this.props.G.activePlayer) === i) ? <span>&#x1f34c;</span> : '')} {((parseInt(this.props.ctx.currentPlayer) === i) ? <span>({ (this.props.ctx.activePlayers !== null) ? this.props.ctx.activePlayers[i] : '' }{((parseInt(this.props.G.activePlayer) === i) ? <span onClick={() => this.props.moves.EndStage()}> &#x27A1;</span> : '')}, &#x1f590;: {this.props.G.drawCount})</span> : '')}</span>},
             &nbsp;<img style={{ height: '1em' }} title="Victory Points" alt="Victory Points" src={require('./images/points.png')} />: {this.props.G.playerVictoryPoints[i]},
             &nbsp;<img style={{ height: '1em' }} title="Coins" alt="Coins" src={require('./images/coin.png')} />: {this.props.G.playerCoins[i]},
             &nbsp;<img style={{ height: '1em' }} title="Swords" alt="Swords" src={require('./images/sword.png')} />: {this.props.G.playerSwords[i]},
@@ -162,9 +162,9 @@ class Board extends React.Component {
             &nbsp;<img style={{ height: '1em' }} title="Priests" alt="Priests" src={require('./images/cross.png')} />: {this.props.G.playerNumPriests[i]},
             &nbsp;<img style={{ height: '1em' }} title="Settlers" alt="Settlers" src={require('./images/hut.png')} />: {this.props.G.playerNumSettlers[i]},
             &nbsp;<img style={{ height: '1em' }} title="Jack of all trades" alt="Jack of all trades" src={require('./images/anchor.png')} /><img style={{ height: '1em' }} title="Jack of all trades" alt="Jack of all trades" src={require('./images/cross.png')} /><img style={{ height: '1em' }} title="Jack of all trades" alt="Jack of all trades" src={require('./images/hut.png')} />: {this.props.G.playerNumJackOfAllTrades[i]},
-            Traders: {this.props.G.playerNumGreenTraders[i] + this.props.G.playerNumBlueTraders[i] + this.props.G.playerNumRedTraders[i] + this.props.G.playerNumBlackTraders[i] + this.props.G.playerNumYellowTraders[i]} = <span style={{color: '#008211'}}>{this.props.G.playerNumGreenTraders[i]}</span> + <span style={{color: '#003d82'}}>{this.props.G.playerNumBlueTraders[i]}</span> + <span style={{color: '#bf0000'}}>{this.props.G.playerNumRedTraders[i]}</span> + <span style={{color: 'black'}}>{this.props.G.playerNumBlackTraders[i]}</span> + <span style={{color: '#fcdb03'}}>{this.props.G.playerNumYellowTraders[i]}</span>,
-            Clerks: {this.props.G.playerNumGreenClerks[i] + this.props.G.playerNumBlueClerks[i] + this.props.G.playerNumRedClerks[i] + this.props.G.playerNumBlackClerks[i] + this.props.G.playerNumYellowClerks[i]} = <span style={{color: '#008211'}}>{this.props.G.playerNumGreenClerks[i]}</span> + <span style={{color: '#003d82'}}>{this.props.G.playerNumBlueClerks[i]}</span> + <span style={{color: '#bf0000'}}>{this.props.G.playerNumRedClerks[i]}</span> + <span style={{color: 'black'}}>{this.props.G.playerNumBlackClerks[i]}</span> + <span style={{color: '#fcdb03'}}>{this.props.G.playerNumYellowClerks[i]}</span>,
-            &nbsp;<img style={{ height: '1em' }} title="Whole Salers" alt="Whole Salers" src={require('./images/whole_saler.png')} />: {this.props.G.playerNumGreenWholeSalers[i] + this.props.G.playerNumBlueWholeSalers[i] + this.props.G.playerNumRedWholeSalers[i] + this.props.G.playerNumBlackWholeSalers[i] + this.props.G.playerNumYellowWholeSalers[i]} = <span style={{color: '#008211'}}>{this.props.G.playerNumGreenWholeSalers[i]}</span> + <span style={{color: '#003d82'}}>{this.props.G.playerNumBlueWholeSalers[i]}</span> + <span style={{color: '#bf0000'}}>{this.props.G.playerNumRedWholeSalers[i]}</span> + <span style={{color: 'black'}}>{this.props.G.playerNumBlackWholeSalers[i]}</span> + <span style={{color: '#fcdb03'}}>{this.props.G.playerNumYellowWholeSalers[i]}</span>,
+            Traders: <span style={{color: '#008211'}}>{this.props.G.playerNumGreenTraders[i]}</span> + <span style={{color: '#003d82'}}>{this.props.G.playerNumBlueTraders[i]}</span> + <span style={{color: '#bf0000'}}>{this.props.G.playerNumRedTraders[i]}</span> + <span style={{color: 'black'}}>{this.props.G.playerNumBlackTraders[i]}</span> + <span style={{color: '#fcdb03'}}>{this.props.G.playerNumYellowTraders[i]}</span>,
+            Clerks: <span style={{color: '#008211'}}>{this.props.G.playerNumGreenClerks[i]}</span> + <span style={{color: '#003d82'}}>{this.props.G.playerNumBlueClerks[i]}</span> + <span style={{color: '#bf0000'}}>{this.props.G.playerNumRedClerks[i]}</span> + <span style={{color: 'black'}}>{this.props.G.playerNumBlackClerks[i]}</span> + <span style={{color: '#fcdb03'}}>{this.props.G.playerNumYellowClerks[i]}</span>,
+            &nbsp;<img style={{ height: '1em' }} title="Whole Salers" alt="Whole Salers" src={require('./images/whole_saler.png')} />: <span style={{color: '#008211'}}>{this.props.G.playerNumGreenWholeSalers[i]}</span> + <span style={{color: '#003d82'}}>{this.props.G.playerNumBlueWholeSalers[i]}</span> + <span style={{color: '#bf0000'}}>{this.props.G.playerNumRedWholeSalers[i]}</span> + <span style={{color: 'black'}}>{this.props.G.playerNumBlackWholeSalers[i]}</span> + <span style={{color: '#fcdb03'}}>{this.props.G.playerNumYellowWholeSalers[i]}</span>
           </CardDisplayWithHeader>
         </div>
       );
@@ -174,23 +174,21 @@ class Board extends React.Component {
       <div>
         <div style={{ padding: '1em 1em 1em 1em', backgroundColor: '#990000' }} >
           <img style={{ height: '4em' }} src={require('./images/titlelogo.png')} />
-          <div>
-            You are: Player {this.props.playerID}&nbsp;
-            Currently in: { (this.props.ctx.activePlayers !== null) ? this.props.ctx.activePlayers[this.props.playerID] : '' }&nbsp;
-            <input type="button" value="continue" onClick={() => this.props.moves.EndStage()} />
+          <div style={{ display: 'inline-block' }}>
+            You are: Player {this.props.playerID}
           </div>
         </div>
         <div className="board">
           {playerList}
 
-          <CardDisplayWithHeader cards={this.props.G.expeditionDisplay} onClick={() => this.setState({ displayExpedition: !this.state.displayExpedition })} cardsOnClick={ (cardIdx) => this.fulfillExpedition(cardIdx) } overflow='auto' displayCards={this.state.displayExpedition}>Expeditions</CardDisplayWithHeader>
-          <CardDisplayWithHeader cards={this.props.G.discardPile} onClick={() => this.setState({ displayDiscardPile: !this.state.displayDiscardPile })} overflow='auto' displayCards={this.state.displayDiscardPile}>Discard Pile</CardDisplayWithHeader>
+          <CardDisplayWithHeader cards={this.props.G.expeditionDisplay} onClick={() => this.setState({ displayExpedition: !this.state.displayExpedition })} cardsOnClick={ (cardIdx) => this.fulfillExpedition(cardIdx) } overflow='auto' displayCards={this.state.displayExpedition}>Expeditions ({this.props.G.expeditionDisplay.length})</CardDisplayWithHeader>
+          <CardDisplayWithHeader cards={this.props.G.discardPile} onClick={() => this.setState({ displayDiscardPile: !this.state.displayDiscardPile })} overflow='auto' displayCards={this.state.displayDiscardPile}>Discard Pile ({this.props.G.discardPile.length})</CardDisplayWithHeader>
           <CardDisplayWithHeader cards={(this.props.G.secret !== undefined) ? this.props.G.secret.drawPile : null} overflow="auto" displayComponent={this.props.G.secret !== undefined}>Draw Pile</CardDisplayWithHeader>
 
           <div>
             <div style={{ overflow: 'auto', whiteSpace: 'nowrap' }}>
               <div style={{ display: 'inline-block', verticalAlign: 'top' }}>
-                <h1>Draw Pile</h1>
+                <h1>Draw Pile ({this.props.G.drawPileLength})</h1>
                 <ul style={{ paddingInlineStart: '0' }}>
                   <li className='card'><img className='cardImageSmall' src={require('./images/cardback.png')} onClick={() => this.props.moves.DrawCard(false)} /></li>
                 </ul>
