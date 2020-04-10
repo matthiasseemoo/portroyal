@@ -179,6 +179,20 @@ function FulfillExpedition(G, ctx, cardIndex) {
     cardsToReplaceIndices.sort(function(a, b){return b-a});
 
     for (const index of cardsToReplaceIndices) {
+      switch (G.playerDisplays[ctx.currentPlayer][index]) {
+        case 'Captain':
+          G.playerNumCaptains[ctx.currentPlayer]--;
+          break;
+        case 'Priest':
+          G.playerNumPriests[ctx.currentPlayer]--;
+          break;
+        case 'Settler':
+          G.playerNumSettlers[ctx.currentPlayer]--;
+          break;
+        case 'JackOfAllTrades':
+          G.playerNumJackOfAllTrades[ctx.currentPlayer]--;
+          break;
+      }
       G.playerVictoryPoints[ctx.currentPlayer] -= G.playerDisplays[ctx.currentPlayer][index].victoryPoints;
       G.discardPile = G.playerDisplays[ctx.currentPlayer].splice(index, 1).concat(G.discardPile);
     }
@@ -323,6 +337,18 @@ function HirePerson(G, ctx, cardIndex) {
       } else if (hiredPerson.subtype === 'Gambler') {
         G.playerNumGamblers = G.playerNumGamblers.slice();
         G.playerNumGamblers[ctx.currentPlayer]++;
+      } else if (hiredPerson.subtype === 'Captain') {
+        G.playerNumCaptains = G.playerNumCaptains.slice();
+        G.playerNumCaptains[ctx.currentPlayer]++;
+      } else if (hiredPerson.subtype === 'Priest') {
+        G.playerNumPriests = G.playerNumPriests.slice();
+        G.playerNumPriests[ctx.currentPlayer]++;
+      } else if (hiredPerson.subtype === 'Settler') {
+        G.playerNumSettlers = G.playerNumSettlers.slice();
+        G.playerNumSettlers[ctx.currentPlayer]++;
+      } else if (hiredPerson.subtype === 'JackOfAllTrades') {
+        G.playerNumJackOfAllTrades = G.playerNumJackOfAllTrades.slice();
+        G.playerNumJackOfAllTrades[ctx.currentPlayer]++;
       } else if (hiredPerson.subtype === 'Trader') {
         if (hiredPerson.color === 'green') {
           G.playerNumGreenTraders = G.playerNumGreenTraders.slice();
