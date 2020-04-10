@@ -9,7 +9,6 @@ import { INVALID_MOVE } from 'boardgame.io/core';
 // TODO: board/game: show when extra money will be available
 // TODO: game: deactivate debug functions
 // TODO: bugfix: jester does not work when someone else fails
-// TODO: bugfix: gambler + 4 colored ships only allows to draw two cards
 // TODO: handle invalid moves: https://boardgame.io/documentation/#/immutability?id=invalid-moves
 
 function DbgShuffleDrawPile(G, ctx) {
@@ -579,13 +578,6 @@ function DrawCard(G, ctx, gambling) {
       }
     }
   }
-
-  // directly continue to trade and hire if player was gambling and no more gambling is possible
-  if ((gambling === true) || (gambling === 1)) {
-    if (G.gambleCount === G.playerNumGamblers[ctx.currentPlayer] && !discardHarborDisplay) {
-      ctx.events.setStage('tradeAndHire');
-    }
-  }
 }
 
 function BeginTurn(G, ctx) {
@@ -650,8 +642,9 @@ function BeginTurn(G, ctx) {
 
 function EndStage(G, ctx) {
   let currentStage = ctx.activePlayers[ctx.currentPlayer];
+  console.log('EndStage called');
 
-  if ((currentStage === 'discover') || (currentStage === 'gambling')) {
+  if ((currentStage === 'discover')) {
     // tradeAndHire onBegin equivalent (only for the currentPlayer)
     let numCardsInHarborDisplays = G.harborDisplayShips.length + G.harborDisplayNonShips.length;
     // Get two coins for each Admiral if 5 or more cards in harbor display
@@ -673,7 +666,9 @@ function EndStage(G, ctx) {
     }
 
     if (G.harborDisplayShips.length >= 4) {
+      console.log('drawCount before update ' + G.drawCount);
       G.drawCount += G.harborDisplayShips.length - 3;
+      console.log('drawCount after update ' + G.drawCount);
     }
     ctx.events.setStage('tradeAndHire');
   } else if (currentStage === 'discoverFailed') {
