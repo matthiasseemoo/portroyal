@@ -642,7 +642,6 @@ function BeginTurn(G, ctx) {
 
 function EndStage(G, ctx) {
   let currentStage = ctx.activePlayers[ctx.currentPlayer];
-  console.log('EndStage called');
 
   if ((currentStage === 'discover')) {
     // tradeAndHire onBegin equivalent (only for the currentPlayer)
@@ -666,9 +665,7 @@ function EndStage(G, ctx) {
     }
 
     if (G.harborDisplayShips.length >= 4) {
-      console.log('drawCount before update ' + G.drawCount);
       G.drawCount += G.harborDisplayShips.length - 3;
-      console.log('drawCount after update ' + G.drawCount);
     }
     ctx.events.setStage('tradeAndHire');
   } else if (currentStage === 'discoverFailed') {
