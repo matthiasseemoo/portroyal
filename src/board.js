@@ -15,7 +15,7 @@ function CardDisplay(props) {
   let cardList = [];
   
   for (let i = 0; i < props.cards.length; i++) {
-    cardList.push(<Card ship={props.cards[i]} onClick={ () => props.onClick(i) } />);
+    cardList.push(<Card ship={props.cards[i]} onClick={ () => { if (props.onClick) props.onClick(i) } } />);
   }
 
   return (
@@ -83,18 +83,10 @@ class Board extends React.Component {
   }
 
   tradeShip(cardIndex, playerId) {
-    if (this.props.ctx.activePlayers[this.props.playerID] === 'discover') {
-      this.props.moves.EndStage();
-    }
-
     this.props.moves.TradeShip(cardIndex, playerId);
   }
 
   hirePerson(cardIndex) {
-    if (this.props.ctx.activePlayers[this.props.playerID] === 'discover') {
-      this.props.moves.EndStage();
-    }
-
     this.props.moves.HirePerson(cardIndex);
   }
 
@@ -131,7 +123,7 @@ class Board extends React.Component {
             buttons.push(<input style={{ position: 'absolute', left: '0px', bottom: ((4 + 2 * distanceCounter++) + 'em'), width: '100%' }} type="button" value={ "Player " + j } onClick={() => this.tradeShip(i, j)} />);
           }
         }
-        if (this.props.G.activePlayer === this.props.playerID) {
+        if (this.props.ctx.currentPlayer === this.props.playerID) {
           harborDisplayShips.push(<li className='card' style={{ position: 'relative' }}><img className='cardImageLarge' src={require('./images/' + this.props.G.harborDisplayShips[i].imageFilename)} />{buttons}</li>);
         } else {
           harborDisplayShips.push(<li className='card' style={{ position: 'relative' }}><img className='cardImage' src={require('./images/' + this.props.G.harborDisplayShips[i].imageFilename)} /></li>);
@@ -161,15 +153,19 @@ class Board extends React.Component {
             &nbsp;<img style={{ height: '1em' }} title="Coins" alt="Coins" src={require('./images/coin.png')} />: {this.props.G.playerCoins[i]},
             &nbsp;<img style={{ height: '1em' }} title="Swords" alt="Swords" src={require('./images/sword.png')} />: {this.props.G.playerSwords[i]},
             &nbsp;<img style={{ height: '1em' }} title="Admirals" alt="Admirals" src={require('./images/admiral.png')} />: {this.props.G.playerNumAdmirals[i]},
+            &nbsp;<img style={{ height: '1em' }} title="Vice Admirals" alt="Vice Admirals" src={require('./images/vice_admiral.png')} />: {this.props.G.playerNumViceAdmirals[i]},
+            &nbsp;<img style={{ height: '1em' }} title="Gunners" alt="Gunners" src={require('./images/gunner.png')} />: {this.props.G.playerNumGunners[i]},
             &nbsp;<img style={{ height: '1em' }} title="Jesters" alt="Jesters" src={require('./images/jester.png')} />: {this.props.G.playerNumJesters[i]},
             &nbsp;<img style={{ height: '1em' }} title="Mademoiselles" alt="Mademoiselles" src={require('./images/mademoiselle.png')} />: {this.props.G.playerNumMademoiselles[i]},
             &nbsp;<img style={{ height: '1em' }} title="Governors" alt="Governors" src={require('./images/governor.png')} />: {this.props.G.playerNumGovenors[i]},
-            Traders: {this.props.G.playerNumGreenTraders[i] + this.props.G.playerNumBlueTraders[i] + this.props.G.playerNumRedTraders[i] + this.props.G.playerNumBlackTraders[i] + this.props.G.playerNumYellowTraders[i]},
-            &nbsp;<img style={{ height: '1em' }} title="Vice Admirals" alt="Vice Admirals" src={require('./images/vice_admiral.png')} />: {this.props.G.playerNumViceAdmirals[i]},
-            &nbsp;<img style={{ height: '1em' }} title="Gunners" alt="Gunners" src={require('./images/gunner.png')} />: {this.props.G.playerNumGunners[i]},
-            Clerks: {this.props.G.playerNumGreenClerks[i] + this.props.G.playerNumBlueClerks[i] + this.props.G.playerNumRedClerks[i] + this.props.G.playerNumBlackClerks[i] + this.props.G.playerNumYellowClerks[i]},
-            &nbsp;<img style={{ height: '1em' }} title="Whole Salers" alt="Whole Salers" src={require('./images/whole_saler.png')} />: {this.props.G.playerNumGreenWholeSalers[i] + this.props.G.playerNumBlueWholeSalers[i] + this.props.G.playerNumRedWholeSalers[i] + this.props.G.playerNumBlackWholeSalers[i] + this.props.G.playerNumYellowWholeSalers[i]},
             &nbsp;<img style={{ height: '1em' }} title="Gamblers" alt="Gamblers" src={require('./images/gambler.png')} />: {this.props.G.playerNumGamblers[i]},
+            &nbsp;<img style={{ height: '1em' }} title="Captains" alt="Captains" src={require('./images/anchor.png')} />: {this.props.G.playerNumCaptains[i]},
+            &nbsp;<img style={{ height: '1em' }} title="Priests" alt="Priests" src={require('./images/cross.png')} />: {this.props.G.playerNumPriests[i]},
+            &nbsp;<img style={{ height: '1em' }} title="Settlers" alt="Settlers" src={require('./images/hut.png')} />: {this.props.G.playerNumSettlers[i]},
+            &nbsp;<img style={{ height: '1em' }} title="Jack of all trades" alt="Jack of all trades" src={require('./images/anchor.png')} /><img style={{ height: '1em' }} title="Jack of all trades" alt="Jack of all trades" src={require('./images/cross.png')} /><img style={{ height: '1em' }} title="Jack of all trades" alt="Jack of all trades" src={require('./images/hut.png')} />: {this.props.G.playerNumJackOfAllTrades[i]},
+            Traders: {this.props.G.playerNumGreenTraders[i] + this.props.G.playerNumBlueTraders[i] + this.props.G.playerNumRedTraders[i] + this.props.G.playerNumBlackTraders[i] + this.props.G.playerNumYellowTraders[i]} = <span style={{color: '#008211'}}>{this.props.G.playerNumGreenTraders[i]}</span> + <span style={{color: '#003d82'}}>{this.props.G.playerNumBlueTraders[i]}</span> + <span style={{color: '#bf0000'}}>{this.props.G.playerNumRedTraders[i]}</span> + <span style={{color: 'black'}}>{this.props.G.playerNumBlackTraders[i]}</span> + <span style={{color: '#fcdb03'}}>{this.props.G.playerNumYellowTraders[i]}</span>,
+            Clerks: {this.props.G.playerNumGreenClerks[i] + this.props.G.playerNumBlueClerks[i] + this.props.G.playerNumRedClerks[i] + this.props.G.playerNumBlackClerks[i] + this.props.G.playerNumYellowClerks[i]} = <span style={{color: '#008211'}}>{this.props.G.playerNumGreenClerks[i]}</span> + <span style={{color: '#003d82'}}>{this.props.G.playerNumBlueClerks[i]}</span> + <span style={{color: '#bf0000'}}>{this.props.G.playerNumRedClerks[i]}</span> + <span style={{color: 'black'}}>{this.props.G.playerNumBlackClerks[i]}</span> + <span style={{color: '#fcdb03'}}>{this.props.G.playerNumYellowClerks[i]}</span>,
+            &nbsp;<img style={{ height: '1em' }} title="Whole Salers" alt="Whole Salers" src={require('./images/whole_saler.png')} />: {this.props.G.playerNumGreenWholeSalers[i] + this.props.G.playerNumBlueWholeSalers[i] + this.props.G.playerNumRedWholeSalers[i] + this.props.G.playerNumBlackWholeSalers[i] + this.props.G.playerNumYellowWholeSalers[i]} = <span style={{color: '#008211'}}>{this.props.G.playerNumGreenWholeSalers[i]}</span> + <span style={{color: '#003d82'}}>{this.props.G.playerNumBlueWholeSalers[i]}</span> + <span style={{color: '#bf0000'}}>{this.props.G.playerNumRedWholeSalers[i]}</span> + <span style={{color: 'black'}}>{this.props.G.playerNumBlackWholeSalers[i]}</span> + <span style={{color: '#fcdb03'}}>{this.props.G.playerNumYellowWholeSalers[i]}</span>,
           </CardDisplayWithHeader>
         </div>
       );
@@ -188,9 +184,9 @@ class Board extends React.Component {
         <div className="board">
           {playerList}
 
-          <CardDisplayWithHeader cards={this.props.G.expeditionDisplay} onClick={() => this.setState({ displayExpedition: !this.state.displayExpedition })} overflow='auto' displayCards={this.state.displayExpedition}>Expeditions</CardDisplayWithHeader>
+          <CardDisplayWithHeader cards={this.props.G.expeditionDisplay} onClick={() => this.setState({ displayExpedition: !this.state.displayExpedition })} cardsOnClick={ (cardIdx) => this.fulfillExpedition(cardIdx) } overflow='auto' displayCards={this.state.displayExpedition}>Expeditions</CardDisplayWithHeader>
           <CardDisplayWithHeader cards={this.props.G.discardPile} onClick={() => this.setState({ displayDiscardPile: !this.state.displayDiscardPile })} overflow='auto' displayCards={this.state.displayDiscardPile}>Discard Pile</CardDisplayWithHeader>
-          <CardDisplayWithHeader cards={this.props.G.secret.drawPile} overflow="auto" displayComponent={this.props.G.secret !== undefined}>Draw Pile</CardDisplayWithHeader>
+          <CardDisplayWithHeader cards={(this.props.G.secret !== undefined) ? this.props.G.secret.drawPile : null} overflow="auto" displayComponent={this.props.G.secret !== undefined}>Draw Pile</CardDisplayWithHeader>
 
           <div>
             <div style={{ overflow: 'auto', whiteSpace: 'nowrap' }}>

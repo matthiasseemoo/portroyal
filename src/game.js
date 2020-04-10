@@ -1,7 +1,17 @@
 import { PlayerView } from 'boardgame.io/core';
 import { INVALID_MOVE } from 'boardgame.io/core';
 
-// TODO: game board
+// TODO: board: show number of draws
+// TODO: board: icons from priests, settlers, captains
+// TODO: board: click on tax increase or draw pile
+// TODO: game: victory condition
+// TODO: whole saler: indicate additional victory points
+// TODO: game: sort cards in displays
+// TODO: game: check for possible expeditions before automatically continuing
+// TODO: bugfix: gamler can continue even though two same colored ships are open
+// TODO: board: indicate when expedition was drawn
+// TODO: board/game: show when extra money will be available
+// TODO: game: deactivate debug functions
 // TODO: handle invalid moves: https://boardgame.io/documentation/#/immutability?id=invalid-moves
 
 function DbgShuffleDrawPile(G, ctx) {
@@ -19,7 +29,7 @@ function DbgGetSwords(G, ctx, amount) {
 }
 
 function FulfillExpedition(G, ctx, cardIndex) {
-  if ((cardIndex >= 0) && (cardIndex < G.expeditionDisplay.length)) {
+  if ((cardIndex >= 0) && (cardIndex < G.expeditionDisplay.length) && (ctx.currentPlayer === G.activePlayer)) {
     const expedition = G.expeditionDisplay[cardIndex];
 
     let captainIndices = [];
@@ -161,8 +171,11 @@ function FulfillExpedition(G, ctx, cardIndex) {
       } else {
         return INVALID_MOVE;
       }
+    } else {
+      return INVALID_MOVE;
     }
 
+    // order indices descending so that cards can be removed from player display
     cardsToReplaceIndices.sort(function(a, b){return b-a});
 
     for (const index of cardsToReplaceIndices) {
@@ -175,10 +188,16 @@ function FulfillExpedition(G, ctx, cardIndex) {
     G.playerVictoryPoints[ctx.currentPlayer] += chosenExpedition.victoryPoints;
     G.playerCoins[ctx.currentPlayer] += chosenExpedition.coins;
     G.playerDisplays[ctx.currentPlayer] = [ chosenExpedition ].concat(G.playerDisplays[ctx.currentPlayer]);
+  } else {
+    return INVALID_MOVE;
   }
 }
 
 function TradeShip(G, ctx, cardIndex, playerId) {
+  if (ctx.activePlayers[ctx.currentPlayer] === 'discover') {
+    EndStage(G, ctx);
+  }
+
   if ((G.drawCount > 0) && (cardIndex >= 0) && (cardIndex < G.harborDisplayShips.length)) {
     let tradedShip = G.harborDisplayShips[cardIndex];
 
@@ -235,6 +254,7 @@ function TradeShip(G, ctx, cardIndex, playerId) {
     G.drawCount--;
 
     if (G.drawCount === 0) {
+      // Check whether Expeditions can be taken first
       ctx.events.endTurn();
     }
   } else {
@@ -243,11 +263,15 @@ function TradeShip(G, ctx, cardIndex, playerId) {
 }
 
 function HirePerson(G, ctx, cardIndex) {
+  if (ctx.activePlayers[ctx.currentPlayer] === 'discover') {
+    EndStage(G, ctx);
+  }
+
   // Check whether another card can be taken and check whether there are cards to take
   if ((G.drawCount > 0) && (cardIndex >= 0) && (cardIndex < G.harborDisplayNonShips.length)) {
     let hiredPerson = G.harborDisplayNonShips[cardIndex];
     let extracost = -G.playerNumMademoiselles[ctx.currentPlayer];
-    if (G.activePlayer === ctx.currentPlayer) extracost += 1;
+    if (G.activePlayer !== ctx.currentPlayer) extracost += 1;
 
     if (hiredPerson.hireingCosts + extracost <= G.playerCoins[ctx.currentPlayer]) {
       // Remove Person from harbor display
@@ -268,7 +292,7 @@ function HirePerson(G, ctx, cardIndex) {
       
       // Remove coins from player
       G.playerCoins = G.playerCoins.slice();
-      G.playerCoins[ctx.currentPlayer] -= hiredPerson.hireingCosts;
+      G.playerCoins[ctx.currentPlayer] -= hiredPerson.hireingCosts - G.playerNumMademoiselles[ctx.currentPlayer];
 
       // if other players take cards, one coin needs to be given to the active player.
       if (G.activePlayer !== ctx.currentPlayer) {
@@ -356,10 +380,15 @@ function HirePerson(G, ctx, cardIndex) {
       G.drawCount--;
 
       if (G.drawCount === 0) {
+        // Check whether Expeditions can be taken first
         ctx.events.endTurn();
       }
+    } else {
+      alert('cost ' + hiredPerson.hireingCosts + ' extracost ' + extracost + ' coins ' + G.playerCoins[ctx.currentPlayer]);
+      return INVALID_MOVE;
     }
   } else {
+    alert('cardindex ' + cardIndex);
     return INVALID_MOVE;
   }
 }
@@ -477,7 +506,7 @@ function BeginTurn(G, ctx) {
     G.endTurnAutomatically[ctx.currentPlayer] = true;
   } else {
     // Get one coin for each Jester
-    if ((G.playerNumJesters > 0) && (G.harborDisplayShips === 0) && (G.harborDisplayNonShips === 0)) {
+    if ((G.playerNumJesters[ctx.currentPlayer] > 0) && (G.harborDisplayShips === 0) && (G.harborDisplayNonShips === 0)) {
       G.playerCoins = G.playerCoins.slice();
       G.playerCoins[ctx.currentPlayer] += G.playerNumJesters[ctx.currentPlayer];
     }
@@ -545,7 +574,7 @@ function EndStage(G, ctx) {
     G.discardPile = G.harborDisplayShips.concat(G.discardPile);
     G.harborDisplayShips = [];
     // Get one coin for each Jester
-    if (G.playerNumJesters > 0) {
+    if (G.playerNumJesters[ctx.currentPlayer] > 0) {
       G.playerCoins = G.playerCoins.slice();
       G.playerCoins[ctx.currentPlayer] += G.playerNumJesters[ctx.currentPlayer];
     }
@@ -601,7 +630,7 @@ function EndStage(G, ctx) {
 }
 
 const PortRoyal = {
-//  playerView: PlayerView.STRIP_SECRETS,
+  playerView: PlayerView.STRIP_SECRETS,
 
   setup: (ctx, setupData) => ({
     secret: {
@@ -805,6 +834,10 @@ const PortRoyal = {
     playerNumRedWholeSalers: Array(ctx.numPlayers).fill(0),
     playerNumBlackWholeSalers: Array(ctx.numPlayers).fill(0),
     playerNumYellowWholeSalers: Array(ctx.numPlayers).fill(0),
+    playerNumCaptains: Array(ctx.numPlayers).fill(0),
+    playerNumPriests: Array(ctx.numPlayers).fill(0),
+    playerNumSettlers: Array(ctx.numPlayers).fill(0),
+    playerNumJackOfAllTrades: Array(ctx.numPlayers).fill(0),
     harborDisplayShips: [],
     harborDisplayNonShips: [],
     shipToRepel: null,
@@ -819,7 +852,7 @@ const PortRoyal = {
 
     stages: {
       discover: {
-        moves: { EndStage, DrawCard: { move: DrawCard, client: false }, FulfillExpedition, DbgGetCoins, DbgGetSwords, DbgShuffleDrawPile },
+        moves: { EndStage, DrawCard: { move: DrawCard, client: false }, HirePerson, TradeShip, FulfillExpedition, DbgGetCoins, DbgGetSwords, DbgShuffleDrawPile },
         next: 'tradeAndHire',
       },
 

@@ -12,9 +12,9 @@ const PortRoyalClient = Client({
   game: PortRoyal,
   board: Board,
   playerView: PlayerView.STRIP_SECRETS,
-  debug: true,
-//  debug: false,
-//  multiplayer: SocketIO({ server: '192.168.188.101:8000' }),
+//  debug: true,
+  debug: false,
+  multiplayer: SocketIO({ server: '192.168.188.101:8000' }),
 });
 
 class App extends React.Component {

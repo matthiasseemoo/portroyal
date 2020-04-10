@@ -1,12 +1,13 @@
+/* font converted using font-converter.net. thank you! */
 @font-face {
-    font-family: 'Romance Fatal Serif Std';
-    src: url('font/subset-RomanceFatalSerifStd.eot');
-    src: url('font/subset-RomanceFatalSerifStd.eot?#iefix') format('embedded-opentype'),
-        url('font/subset-RomanceFatalSerifStd.woff2') format('woff2'),
-        url('font/subset-RomanceFatalSerifStd.woff') format('woff'),
-        url('font/subset-RomanceFatalSerifStd.ttf') format('truetype'),
-        url('font/subset-RomanceFatalSerifStd.svg#RomanceFatalSerifStd') format('svg');
-    font-weight: 500;
-    font-style: normal;
+  font-family: "RomanceFatalSerifStd";
+  src: url("./font/RomFtlSrifStdJuanCasco.eot"); /* IE9 Compat Modes */
+  src: url("./font/RomFtlSrifStdJuanCasco.eot?#iefix") format("embedded-opentype"), /* IE6-IE8 */
+    url("./font/RomFtlSrifStdJuanCasco.otf") format("opentype"), /* Open Type Font */
+    url("./font/RomFtlSrifStdJuanCasco.svg") format("svg"), /* Legacy iOS */
+    url("./font/RomFtlSrifStdJuanCasco.ttf") format("truetype"), /* Safari, Android, iOS */
+    url("./font/RomFtlSrifStdJuanCasco.woff") format("woff"), /* Modern Browsers */
+    url("./font/RomFtlSrifStdJuanCasco.woff2") format("woff2"); /* Modern Browsers */
+  font-weight: normal;
+  font-style: normal;
 }
-
