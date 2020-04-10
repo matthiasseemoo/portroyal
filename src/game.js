@@ -4,12 +4,14 @@ import { INVALID_MOVE } from 'boardgame.io/core';
 // TODO: board: show number of draws
 // TODO: board: click on tax increase or draw pile
 // TODO: whole saler: indicate additional victory points
-// TODO: game: sort cards in displays
-// TODO: game: check for possible expeditions before automatically continuing
+//  TODO: game: sort cards in displays
+//  TODO: game: check for possible expeditions before automatically continuing
 // TODO: bugfix: gamler can continue even though two same colored ships are open
 // TODO: board: indicate when expedition was drawn
 // TODO: board/game: show when extra money will be available
 // TODO: game: deactivate debug functions
+// TODO: bugfix: jester does not work when someone else fails
+// TODO: board: show cards left in draw pile
 // TODO: handle invalid moves: https://boardgame.io/documentation/#/immutability?id=invalid-moves
 
 function DbgShuffleDrawPile(G, ctx) {
@@ -26,7 +28,7 @@ function DbgGetSwords(G, ctx, amount) {
     G.playerSwords[ctx.currentPlayer] += amount;
 }
 
-function FulfillExpedition(G, ctx, cardIndex) {
+function checkFulfillableExpedition(G, ctx, cardIndex) {
   if ((cardIndex >= 0) && (cardIndex < G.expeditionDisplay.length) && (parseInt(ctx.currentPlayer) === parseInt(G.activePlayer))) {
     const expedition = G.expeditionDisplay[cardIndex];
 
@@ -174,8 +176,18 @@ function FulfillExpedition(G, ctx, cardIndex) {
     }
 
     // order indices descending so that cards can be removed from player display
-    cardsToReplaceIndices.sort(function(a, b){return b-a});
+    cardsToReplaceIndices.sort(function(a, b) { return b-a });
 
+    return cardsToReplaceIndices;
+  } else {
+    return INVALID_MOVE;
+  }
+}
+
+function FulfillExpedition(G, ctx, cardIndex) {
+  let cardsToReplaceIndices = checkFulfillableExpedition(G, ctx, cardIndex);
+
+  if (cardsToReplaceIndices !== INVALID_MOVE) {
     for (const index of cardsToReplaceIndices) {
       switch (G.playerDisplays[ctx.currentPlayer][index]) {
         case 'Captain':
@@ -266,8 +278,18 @@ function TradeShip(G, ctx, cardIndex, playerId) {
     G.drawCount--;
 
     if (G.drawCount === 0) {
-      // Check whether Expeditions can be taken first
-      ctx.events.endTurn();
+      let fulfillableExpeditionFound = false;
+
+      for (const expedition of G.expeditionDisplay) {
+        if (checkFulfillableExpedition(G, ctx, expedition) !== INVALID_MOVE) {
+          fulfillableExpeditionFound = true;
+          break;
+        }
+      }
+
+      if (!fulfillableExpeditionFound) {
+        ctx.events.endTurn();
+      }
     }
   } else {
     return INVALID_MOVE;
@@ -293,6 +315,7 @@ function HirePerson(G, ctx, cardIndex) {
       // Add hired person to player display
       G.playerDisplays = G.playerDisplays.slice();
       G.playerDisplays[ctx.currentPlayer] = [ hiredPerson ].concat(G.playerDisplays[ctx.currentPlayer]);
+      G.playerDisplays[ctx.currentPlayer].sort(function(a, b) { return a.subtype.localeCompare(b.subtype) });
 
       // Increase player's Victory Points
       G.playerVictoryPoints[ctx.currentPlayer] += hiredPerson.victoryPoints;
@@ -404,8 +427,18 @@ function HirePerson(G, ctx, cardIndex) {
       G.drawCount--;
 
       if (G.drawCount === 0) {
-        // Check whether Expeditions can be taken first
-        ctx.events.endTurn();
+        let fulfillableExpeditionFound = false;
+
+        for (const expedition of G.expeditionDisplay) {
+          if (checkFulfillableExpedition(G, ctx, expedition) !== INVALID_MOVE) {
+            fulfillableExpeditionFound = true;
+            break;
+          }
+        }
+
+        if (!fulfillableExpeditionFound) {
+          ctx.events.endTurn();
+        }
       }
     } else {
       alert('cost ' + hiredPerson.hireingCosts + ' extracost ' + extracost + ' coins ' + G.playerCoins[ctx.currentPlayer]);
@@ -470,6 +503,7 @@ function DrawCard(G, ctx, gambling) {
       G.expeditionDisplay = [drawnCard].concat(G.expeditionDisplay);
     } else if (drawnCard.type === 'Person') {
       G.harborDisplayNonShips = [drawnCard].concat(G.harborDisplayNonShips);
+      G.harborDisplayNonShips.sort(function(a, b) { return a.subtype.localeCompare(b.subtype) });
     } else if (drawnCard.type === 'Ship') {
       // ships can only be repelled before the gambler is played
       if ((G.gambleCount === 0) && (drawnCard.swords <= G.playerSwords[ctx.currentPlayer])) {
