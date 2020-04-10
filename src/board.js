@@ -100,7 +100,7 @@ class Board extends React.Component {
   render() {
     let shipToRepel = [];
     if (this.props.G.shipToRepel !== null) {
-      if (this.props.G.activePlayer === this.props.playerID) {
+      if (parseInt(this.props.G.activePlayer) === parseInt(this.props.playerID)) {
         shipToRepel.push(<li className='card' style={{ position: 'relative' }}><img className='cardImageLarge' src={require('./images/' + this.props.G.shipToRepel.imageFilename)} /><input style={{ position: 'absolute', left: '0px', bottom: '4em', width: '100%' }} type="button" value="Repel" onClick={() => this.props.moves.RepelShip(true)} /><input style={{ position: 'absolute', left: '0px', bottom: '6em', width: '100%' }} type="button" value="Keep" onClick={() => this.props.moves.RepelShip(false)} /></li>);
       } else {
         shipToRepel.push(<li className='card' style={{ position: 'relative' }}><img className='cardImage' src={require('./images/' + this.props.G.shipToRepel.imageFilename)} /></li>);
@@ -122,7 +122,7 @@ class Board extends React.Component {
             buttons.push(<input style={{ position: 'absolute', left: '0px', bottom: ((4 + 2 * distanceCounter++) + 'em'), width: '100%' }} type="button" value={ "Player " + j } onClick={() => this.tradeShip(i, j)} />);
           }
         }
-        if (this.props.ctx.currentPlayer === this.props.playerID) {
+        if (parseInt(this.props.ctx.currentPlayer) === parseInt(this.props.playerID)) {
           harborDisplayShips.push(<li className='card' style={{ position: 'relative' }}><img className='cardImageLarge' src={require('./images/' + this.props.G.harborDisplayShips[i].imageFilename)} />{buttons}</li>);
         } else {
           harborDisplayShips.push(<li className='card' style={{ position: 'relative' }}><img className='cardImage' src={require('./images/' + this.props.G.harborDisplayShips[i].imageFilename)} /></li>);

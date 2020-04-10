@@ -28,7 +28,7 @@ function DbgGetSwords(G, ctx, amount) {
 }
 
 function FulfillExpedition(G, ctx, cardIndex) {
-  if ((cardIndex >= 0) && (cardIndex < G.expeditionDisplay.length) && (ctx.currentPlayer === G.activePlayer)) {
+  if ((cardIndex >= 0) && (cardIndex < G.expeditionDisplay.length) && (parseInt(ctx.currentPlayer) === parseInt(G.activePlayer))) {
     const expedition = G.expeditionDisplay[cardIndex];
 
     let captainIndices = [];
@@ -215,7 +215,7 @@ function TradeShip(G, ctx, cardIndex, playerId) {
     let tradedShip = G.harborDisplayShips[cardIndex];
 
     if (tradedShip.extraCoin === true) {
-      if (!((playerId >= 0) && (playerId < ctx.numPlayers) && (playerId !== ctx.currentPlayer))) {
+      if (!((playerId >= 0) && (playerId < ctx.numPlayers) && (parseInt(playerId) !== parseInt(ctx.currentPlayer)))) {
         // If ship has an extra coin for another player, playerId needs to be set to a valid value
         return INVALID_MOVE;
       }
@@ -229,7 +229,7 @@ function TradeShip(G, ctx, cardIndex, playerId) {
     G.playerCoins[playerId] += 1;
 
     // if other players take cards, one coin needs to be given to the active player.
-    if (G.activePlayer !== ctx.currentPlayer) {
+    if (parseInt(G.activePlayer) !== parseInt(ctx.currentPlayer)) {
       G.playerCoins[ctx.currentPlayer]--;
       G.playerCoins[G.activePlayer]++;
     }
@@ -284,7 +284,7 @@ function HirePerson(G, ctx, cardIndex) {
   if ((G.drawCount > 0) && (cardIndex >= 0) && (cardIndex < G.harborDisplayNonShips.length)) {
     let hiredPerson = G.harborDisplayNonShips[cardIndex];
     let extracost = -G.playerNumMademoiselles[ctx.currentPlayer];
-    if (G.activePlayer !== ctx.currentPlayer) extracost += 1;
+    if (parseInt(G.activePlayer) !== parseInt(ctx.currentPlayer)) extracost += 1;
 
     if (hiredPerson.hireingCosts + extracost <= G.playerCoins[ctx.currentPlayer]) {
       // Remove Person from harbor display
@@ -308,7 +308,7 @@ function HirePerson(G, ctx, cardIndex) {
       G.playerCoins[ctx.currentPlayer] -= hiredPerson.hireingCosts - G.playerNumMademoiselles[ctx.currentPlayer];
 
       // if other players take cards, one coin needs to be given to the active player.
-      if (G.activePlayer !== ctx.currentPlayer) {
+      if (parseInt(G.activePlayer) !== parseInt(ctx.currentPlayer)) {
         G.playerCoins[ctx.currentPlayer]--;
         G.playerCoins[G.activePlayer]++;
       }
@@ -659,7 +659,7 @@ function CheckEndGame(G, ctx) {
   let winners = [];
 
   // check if it is the discard phase of the last player before the start player
-  if ((G.activePlayer === (ctx.numPlayers - 1)) && (turnmod === ctx.currentPlayer * (1 + ctx.numPlayers) + ctx.numPlayers)) {
+  if ((parseInt(G.activePlayer) === (ctx.numPlayers - 1)) && (turnmod === ctx.currentPlayer * (1 + ctx.numPlayers) + ctx.numPlayers)) {
     let maxVictoryPoints = 0;
     for (let i = 0; i < ctx.numPlayers; i++) {
       if (G.playerVictoryPoints[i] > maxVictoryPoints) {
