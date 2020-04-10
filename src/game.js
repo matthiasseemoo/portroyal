@@ -3,7 +3,6 @@ import { INVALID_MOVE } from 'boardgame.io/core';
 
 // TODO: board: show number of draws
 // TODO: board: click on tax increase or draw pile
-// TODO: game: victory condition
 // TODO: whole saler: indicate additional victory points
 // TODO: game: sort cards in displays
 // TODO: game: check for possible expeditions before automatically continuing
