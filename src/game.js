@@ -2,7 +2,6 @@ import { PlayerView } from 'boardgame.io/core';
 import { INVALID_MOVE } from 'boardgame.io/core';
 
 // TODO: board: show number of draws
-// TODO: board: icons from priests, settlers, captains
 // TODO: board: click on tax increase or draw pile
 // TODO: game: victory condition
 // TODO: whole saler: indicate additional victory points
@@ -519,7 +518,7 @@ function BeginTurn(G, ctx) {
   G.gambleCount = 0;
 
   if (turnmod === ctx.currentPlayer * (1 + ctx.numPlayers)) {
-    G.activePlayer = ctx.currentPlayer;
+    G.activePlayer = parseInt(ctx.currentPlayer);
     // Start with discover followed by trade&hire
     ctx.events.setStage('discover');
   } else if (turnmod === ctx.currentPlayer * (1 + ctx.numPlayers) + ctx.numPlayers) {
@@ -652,6 +651,40 @@ function EndStage(G, ctx) {
     RepelShip(G, ctx, false);
   } else if (currentStage === 'tradeAndHire') {
     ctx.events.endTurn();
+  }
+}
+
+function CheckEndGame(G, ctx) {
+  let turnmod = (ctx.turn - 1) % (ctx.numPlayers * (ctx.numPlayers + 1));
+  let winners = [];
+
+  // check if it is the discard phase of the last player before the start player
+  if ((G.activePlayer === (ctx.numPlayers - 1)) && (turnmod === ctx.currentPlayer * (1 + ctx.numPlayers) + ctx.numPlayers)) {
+    let maxVictoryPoints = 0;
+    for (let i = 0; i < ctx.numPlayers; i++) {
+      if (G.playerVictoryPoints[i] > maxVictoryPoints) {
+        maxVictoryPoints = G.playerVictoryPoints[i];
+      }
+    }
+
+    if (maxVictoryPoints >= 12) {
+      let maxCoinsIfMaxVictoryPoints = 0;
+      for (let i = 0; i < ctx.numPlayers; i++) {
+        if ((G.playerVictoryPoints[i] === maxVictoryPoints) && (G.playerCoins[i] > maxCoinsIfMaxVictoryPoints)) {
+          maxCoinsIfMaxVictoryPoints = G.playerCoins[i];
+        }
+      }
+
+      for (let i = 0; i < ctx.numPlayers; i++) {
+        if ((G.playerVictoryPoints[i] === maxVictoryPoints) && (G.playerCoins[i] === maxCoinsIfMaxVictoryPoints)) {
+          winners.push(i);
+        }
+      }
+
+      if (winners.length > 0) {
+        return { winners: winners };
+      }
+    }
   }
 }
 
@@ -901,6 +934,8 @@ const PortRoyal = {
       },
     },
   },
+
+  endIf: CheckEndGame,
 
   events: {
     endStage: false,

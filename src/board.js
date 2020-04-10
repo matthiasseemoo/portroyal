@@ -98,7 +98,6 @@ class Board extends React.Component {
   }
 
   render() {
-
     let shipToRepel = [];
     if (this.props.G.shipToRepel !== null) {
       if (this.props.G.activePlayer === this.props.playerID) {
@@ -148,7 +147,7 @@ class Board extends React.Component {
       playerList.push(
         <div>
           <CardDisplayWithHeader cards={this.props.G.playerDisplays[i]} onClick={() => this.setState({ displayPlayerId: i }) } cardsOnClick={(cardIdx) => this.handlePlayerCardClick(this.props.G.playerDisplays[i][cardIdx])} overflow="auto" displayCards={this.state.displayPlayerId === i}>
-            {(parseInt(this.props.ctx.currentPlayer) === i) ? <span>&#x1f449;</span> : ''} Player {i} {(parseInt(this.props.G.activePlayer) === i) ? <span>&#x1f34c;</span> : ''},
+            {(this.props.ctx.gameover) ? '' : ((parseInt(this.props.ctx.currentPlayer) === i) ? <span>&#x1f449;</span> : '')} Player {i} {(this.props.ctx.gameover) ? ((this.props.ctx.gameover.winners.includes(i)) ? <span>&#x1f3c6;</span> : '') : ((parseInt(this.props.G.activePlayer) === i) ? <span>&#x1f34c;</span> : '')},
             &nbsp;<img style={{ height: '1em' }} title="Victory Points" alt="Victory Points" src={require('./images/points.png')} />: {this.props.G.playerVictoryPoints[i]},
             &nbsp;<img style={{ height: '1em' }} title="Coins" alt="Coins" src={require('./images/coin.png')} />: {this.props.G.playerCoins[i]},
             &nbsp;<img style={{ height: '1em' }} title="Swords" alt="Swords" src={require('./images/sword.png')} />: {this.props.G.playerSwords[i]},
