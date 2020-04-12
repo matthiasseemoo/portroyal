@@ -4,7 +4,9 @@ This is an open source implementation of the card game Port Royal. *It does not 
 
 ## Start multiplayer server
 
-### `node -r esm src/server.js`
+```
+node -r esm src/server.js
+```
 
 You can edit the following line in  `src/App.js` to point to your server's address:
 ```
@@ -13,7 +15,9 @@ multiplayer: SocketIO({ server: 'localhost:8000' }),
 
 ## Start game
 
-### `npm start`
+```
+npm start
+```
 
 Runs the app in the development mode.<br />
 Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
