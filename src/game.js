@@ -9,6 +9,10 @@ import { INVALID_MOVE } from 'boardgame.io/core';
 // TODO: board/game: show when extra money will be available
 // TODO: game: deactivate debug functions
 // TODO: bugfix: jester does not work when someone else fails
+// TODO: bugfix: fulfillable expedition not working (turn may end before expedition can be fulfilled)
+// TODO: board: enhance code quality
+// TODO: bugfix: counting anchors, crosses and huts does not work after fulfilling expedition
+// TODO: bugfix: gampling sometimes does not fail correctly
 // TODO: handle invalid moves: https://boardgame.io/documentation/#/immutability?id=invalid-moves
 
 function DbgShuffleDrawPile(G, ctx) {
