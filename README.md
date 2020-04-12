@@ -2,6 +2,15 @@
 
 This is an open source implementation of the card game Port Royal. *It does not contain any graphics and fonts*.
 
+## Install game
+
+Clone the repository. Change into the cloned directory. Run:
+
+```
+npm install
+```
+
+
 ## Start multiplayer server
 
 ```
